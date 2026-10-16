@@ -1,0 +1,6 @@
+{
+  "name": "Eruv Explorer: 3D Game & Beginner's Visual Guide to Shabbat Laws",
+  "description": "An interactive 3D simulation game and illustrated infographics explaining the Jewish laws of the Eruv, Tzurat HaPetach, domains, and Shabbat carrying.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
