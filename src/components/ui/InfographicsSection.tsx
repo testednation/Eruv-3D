@@ -12,13 +12,16 @@ import {
   MapPin, 
   HelpCircle,
   ArrowRight,
-  Flame
+  Flame,
+  Lightbulb
 } from 'lucide-react';
 import { SHABBAT_DOMAINS } from '../../data/eruvData';
+import { ERUV_FACTS } from '../../data/eruvFacts';
 import { soundManager } from '../../utils/audio';
+import { KosherVisualizer } from './KosherVisualizer';
 
 export const InfographicsSection: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'basics' | 'doorway' | 'domains' | 'golden_rules' | 'matzah' | 'real_world'>('basics');
+  const [activeTab, setActiveTab] = useState<'basics' | 'doorway' | 'domains' | 'golden_rules' | 'matzah' | 'real_world' | 'facts'>('basics');
 
   const tabs = [
     { id: 'basics', label: 'Eruv 101: The Basics', icon: BookOpen },
@@ -27,6 +30,7 @@ export const InfographicsSection: React.FC = () => {
     { id: 'golden_rules', label: '5 Golden Rules', icon: ShieldCheck },
     { id: 'matzah', label: 'The Matzah Mystery', icon: Sparkles },
     { id: 'real_world', label: 'Real World Cities', icon: MapPin },
+    { id: 'facts', label: 'Did You Know?', icon: Lightbulb },
   ];
 
   return (
@@ -228,6 +232,11 @@ export const InfographicsSection: React.FC = () => {
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* Interactive Real-Time Kosher vs. Pasul Visualizer */}
+          <div className="mt-4">
+            <KosherVisualizer currentRule="overhead" isCompact={false} />
           </div>
         </div>
       )}
@@ -442,6 +451,59 @@ export const InfographicsSection: React.FC = () => {
                 Weekly fleet of specialized inspection trucks.
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tab 7: Did You Know? Facts & Curiosities */}
+      {activeTab === 'facts' && (
+        <div className="space-y-4 animate-fade-in">
+          <div className="text-center max-w-xl mx-auto mb-4">
+            <h3 className="text-xl font-serif font-bold text-white">
+              Eruv Lore, History & Curiosities
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">
+              Fascinating historical milestones and modern engineering marvels behind the world's most unique legal perimeters.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {ERUV_FACTS.map((fact) => (
+              <div
+                key={fact.id}
+                className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col justify-between space-y-2.5"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-sky-500/30 bg-sky-500/20 text-sky-300">
+                      {fact.category}
+                    </span>
+                    <span className="text-xs font-mono text-slate-400 flex items-center gap-1">
+                      <span>{fact.icon}</span>
+                      <span>{fact.tag}</span>
+                    </span>
+                  </div>
+
+                  <h4 className="font-bold text-base text-white font-serif">
+                    {fact.title}
+                  </h4>
+
+                  <p className="text-xs text-slate-300 leading-relaxed mt-1">
+                    {fact.fact}
+                  </p>
+                </div>
+
+                <div className="space-y-2 pt-2 border-t border-slate-800">
+                  <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 text-[11px] text-slate-400 leading-relaxed italic">
+                    "{fact.historicalContext}"
+                  </div>
+
+                  <div className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
+                    <span>Source: {fact.source}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

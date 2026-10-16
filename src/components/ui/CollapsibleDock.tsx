@@ -13,7 +13,9 @@ import {
   ChevronUp, 
   CheckCircle2, 
   AlertTriangle,
-  Download
+  Download,
+  ScrollText,
+  Trophy
 } from 'lucide-react';
 import { AppMode } from '../../types/eruv';
 import { soundManager } from '../../utils/audio';
@@ -29,6 +31,9 @@ interface CollapsibleDockProps {
   onCameraPreset: (preset: 'overview' | 'synagogue' | 'tasks' | 'perimeter') => void;
   onOpenGlossary: () => void;
   onOpenOfflineModal: () => void;
+  onOpenTutorial?: () => void;
+  onOpenAchievements?: () => void;
+  unlockedBadgesCount?: number;
   isOnline: boolean;
 }
 
@@ -43,6 +48,9 @@ export const CollapsibleDock: React.FC<CollapsibleDockProps> = ({
   onCameraPreset,
   onOpenGlossary,
   onOpenOfflineModal,
+  onOpenTutorial,
+  onOpenAchievements,
+  unlockedBadgesCount = 0,
   isOnline,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -162,6 +170,18 @@ export const CollapsibleDock: React.FC<CollapsibleDockProps> = ({
                 <HelpCircle className="w-3.5 h-3.5" />
                 <span>Halacha Quiz</span>
               </button>
+
+              <button
+                onClick={() => handleModeChange('daily-halacha')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  currentMode === 'daily-halacha'
+                    ? 'bg-amber-500 text-slate-950 shadow-md font-bold'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                }`}
+              >
+                <ScrollText className="w-3.5 h-3.5" />
+                <span>Daily Halacha</span>
+              </button>
             </div>
 
             {/* Quick Actions & Toggles */}
@@ -217,6 +237,39 @@ export const CollapsibleDock: React.FC<CollapsibleDockProps> = ({
                   Inspect
                 </button>
               </div>
+
+              {/* Tutorial Button */}
+              {onOpenTutorial && (
+                <button
+                  onClick={() => {
+                    soundManager.playClick();
+                    onOpenTutorial();
+                  }}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-amber-300 hover:text-white bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 rounded-lg transition-colors cursor-pointer"
+                  title="Open Interactive Tutorial & Kosher Rules Guide"
+                >
+                  <HelpCircle className="w-3.5 h-3.5" />
+                  <span>Tutorial</span>
+                </button>
+              )}
+
+              {/* Badges / Achievements Button */}
+              {onOpenAchievements && (
+                <button
+                  onClick={() => {
+                    soundManager.playClick();
+                    onOpenAchievements();
+                  }}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-amber-200 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700/60 rounded-lg transition-colors cursor-pointer"
+                  title="View Achievements & Badges"
+                >
+                  <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="hidden sm:inline">Badges</span>
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    {unlockedBadgesCount}
+                  </span>
+                </button>
+              )}
 
               {/* Glossary Button */}
               <button

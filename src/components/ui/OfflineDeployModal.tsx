@@ -87,7 +87,7 @@ export const OfflineDeployModal: React.FC<OfflineDeployModalProps> = ({
           </div>
 
           <p className="text-xs text-slate-300 leading-relaxed mb-3">
-            Install Eruv Explorer onto your home screen or desktop. It runs in full standalone mode with no browser URL bars and works 100% offline — even during Shabbat or without cellular reception!
+            Install Eruv Explorer onto your home screen or desktop. It runs in full standalone mode with no browser URL bars and works 100% offline — perfect for studying and exploring anywhere without an internet connection!
           </p>
 
           {isInstalled ? (

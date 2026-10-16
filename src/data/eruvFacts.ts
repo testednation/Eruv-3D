@@ -1,0 +1,133 @@
+export interface EruvFact {
+  id: string;
+  category: 'Urban History' | 'Halachic Principle' | 'Modern Engineering' | 'Global Eruvin' | 'Talmudic Lore';
+  tag: string;
+  icon: string;
+  title: string;
+  fact: string;
+  historicalContext: string;
+  source: string;
+}
+
+export const ERUV_FACTS: EruvFact[] = [
+  {
+    id: 'manhattan-eruv',
+    category: 'Urban History',
+    tag: 'Manhattan, NYC',
+    icon: '🏙️',
+    title: 'The Seawalls of Manhattan Form Its Eruv',
+    fact: 'The Manhattan eruv spans over 18 miles and costs over $100,000 annually to maintain. Rather than erecting miles of poles, it incorporates Manhattan’s coastal seawalls, Hudson River piers, FDR Drive fencing, and highway guardrails.',
+    historicalContext: 'Rabbi Menachem Mendel Kasher published an extensive halachic treatise in the 1950s proposing Manhattan could be enclosed, which culminated in the modern eruv approved in the 1980s.',
+    source: 'Congregation B\'nai Jeshurun Archives; HaPardes (Vol. 34)',
+  },
+  {
+    id: 'white-house-eruv',
+    category: 'Global Eruvin',
+    tag: 'Washington, D.C.',
+    icon: '🏛️',
+    title: 'The White House & Supreme Court Are Inside an Eruv',
+    fact: 'The Washington, D.C. eruv completely encloses the White House, the U.S. Capitol building, the Lincoln Memorial, and the Supreme Court.',
+    historicalContext: 'To create a valid municipal eruv under Jewish law, a formal legal lease of jurisdiction ("Sechirat Reshut") was signed with municipal authorities, including the National Park Service and the Mayor.',
+    source: 'D.C. Eruv Committee; Smithsonian Magazine',
+  },
+  {
+    id: 'king-solomon-wisdom',
+    category: 'Talmudic Lore',
+    tag: 'Ancient Jerusalem',
+    icon: '👑',
+    title: 'King Solomon’s Enactment Caused the Heavens to Rejoice',
+    fact: 'According to the Talmud, when King Solomon instituted the laws of Eruvin and Hand-washing (Netilat Yadayim), a Heavenly Voice (Bat Kol) burst forth and declared: "My son, if your heart be wise, my heart will rejoice!" (Proverbs 23:15).',
+    historicalContext: 'Before Solomon, people were confusing private courtyards with public streets. Solomon instituted the communal food partnership (Eruv Chatzerot) to preserve public domain boundaries.',
+    source: 'Talmud Eruvin 21b; Talmud Shabbat 14b',
+  },
+  {
+    id: 'translucent-fishing-line',
+    category: 'Modern Engineering',
+    tag: 'Invisible Infrastructure',
+    icon: '🎣',
+    title: 'Why 100-Pound Test Fishing Line is the Gold Standard',
+    fact: 'Most suburban eruv wires are made of heavy-duty 50 to 100-pound translucent monofilament or braided nylon fishing line. It is virtually invisible to passersby, doesn\'t cause visual clutter, and can withstand gale-force winds.',
+    historicalContext: 'Modern synthetic lines resist thermal expansion in hot summers and ice accumulation during winter blizzards far better than metal wire, which expands and sags.',
+    source: 'Journal of Halacha and Contemporary Society (Vol. 21)',
+  },
+  {
+    id: 'the-one-dollar-lease',
+    category: 'Halachic Principle',
+    tag: 'Sechirat Reshut',
+    icon: '📜',
+    title: 'Renting City Rights from Police Commissioners for $1',
+    fact: 'Jewish law requires the community to obtain permission ("Sechirat Reshut") from civil authorities who hold jurisdiction over the public streets. In cities like New York and London, a ceremonial contract leasing street rights for $1 is executed with the Mayor or Police Chief.',
+    historicalContext: 'This non-exclusive lease grants halachic access to common grounds without infringing upon any municipal law or property rights.',
+    source: 'Shulchan Aruch, Orach Chaim 391:1; Mishnah Berurah',
+  },
+  {
+    id: 'bucket-truck-inspections',
+    category: 'Modern Engineering',
+    tag: 'High-Tech Audits',
+    icon: '🚚',
+    title: 'Weekly Laser & Hydraulic Boom Audits',
+    fact: 'Every Friday at 5:00 AM, certified eruv checkers drive specialized bucket trucks equipped with high-powered spotlights, laser sights, and spotting scopes to verify that not a single millimeter of wire has snapped or slipped off the pole caps.',
+    historicalContext: 'Many modern eruv committees now deploy quadcopter drones with 4K cameras to inspect hard-to-reach spans over train tracks and highways.',
+    source: 'Rabbinical Council of America (RCA) Eruv Guidelines',
+  },
+  {
+    id: 'the-umbrella-paradox',
+    category: 'Halachic Principle',
+    tag: 'Shabbat Nuance',
+    icon: '☂️',
+    title: 'Why You Still Can’t Carry an Open Umbrella Inside an Eruv',
+    fact: 'Even inside a 100% kosher eruv where carrying is permitted, opening or carrying an open umbrella in the rain is prohibited on Shabbat! The reason is not carrying, but the prohibition against constructing a temporary roof or shelter (Ohel).',
+    historicalContext: 'This highlights the crucial distinction: an eruv ONLY permits the Melacha of carrying (Hotza\'ah); other Shabbat prohibitions like Muktzeh and Ohel remain strictly in effect.',
+    source: 'Noda BiYehudah, Orach Chaim 30; Mishnah Berurah 315:8',
+  },
+  {
+    id: 'eternal-matzah',
+    category: 'Halachic Principle',
+    tag: 'Eruv Chatzerot',
+    icon: '🍞',
+    title: 'Why Matzah is Used Instead of Fresh Sliced Bread',
+    fact: 'The communal food partnership must remain edible throughout the year. Fresh bread molds in days, which would invalidate the eruv. Jewish law permits using shelf-stable baked Matzah, which stays fully edible for years when kept dry.',
+    historicalContext: 'The communal matzah box is typically placed in the synagogue sanctuary or the Rabbi’s study, renewed annually on the morning before Passover.',
+    source: 'Shulchan Aruch, Orach Chaim 366:3; Chayei Adam 72',
+  },
+  {
+    id: 'natural-cliffs-eruv',
+    category: 'Global Eruvin',
+    tag: 'Mediterranean Sea',
+    icon: '🌊',
+    title: 'Natural Sea Cliffs and Slopes Count as Walls',
+    fact: 'In Israeli coastal cities like Netanya, Tel Aviv, and Ashkelon, steep natural cliffs dropping into the Mediterranean Sea count halachically as partitions (Tel HaMitkattel), eliminating the need for artificial wire along the coast.',
+    historicalContext: 'A natural slope that rises at least 10 tefachim over a horizontal span of 4 amot (cubits) qualifies as a legal halachic wall.',
+    source: 'Talmud Eruvin 22a; Shulchan Aruch OC 362:2',
+  },
+  {
+    id: 'longest-eruv',
+    category: 'Global Eruvin',
+    tag: 'World Record',
+    icon: '🗺️',
+    title: 'The Great Toronto Eruv: Over 125 Miles of Boundary',
+    fact: 'The Toronto Eruv is one of the largest contiguous urban eruv systems in the world, spanning over 125 miles (200 km) and encompassing tens of thousands of Jewish households.',
+    historicalContext: 'It integrates Canadian Pacific Railway fences, highway noise barriers, hydro electric corridors, and ravines.',
+    source: 'Toronto Bais Din & Eruv Committee',
+  },
+  {
+    id: 'storm-insurance',
+    category: 'Modern Engineering',
+    tag: 'Weather Resiliency',
+    icon: '⚡',
+    title: 'Spring-Loaded Tensioners Combat Heavy Snow',
+    fact: 'In cold climates, eruv cables are equipped with calibrated stainless steel tension springs. When ice or snow weighs down the line, the spring absorbs the extra load to prevent snapping, pulling the wire taut again as the ice melts.',
+    historicalContext: 'This engineering adaptation prevents winter eruv failure after blizzards.',
+    source: 'Association of Eruv Supervisors (AES) Technical Bulletin',
+  },
+  {
+    id: 'gud-asek-sky',
+    category: 'Talmudic Lore',
+    tag: 'Halachic Geometry',
+    icon: '✨',
+    title: 'Invisible Walls Rising into the Heavens',
+    fact: 'Under the Talmudic principle "Gud Asek Mechitzta", a physical post measuring only 40 inches tall is legally viewed as having invisible partition walls extending infinitely upward into the stratosphere!',
+    historicalContext: 'This allows a wire suspended 50 feet in the air to legally couple with a curb-level wooden strip on a utility pole.',
+    source: 'Talmud Eruvin 11b; Rashi ad locum',
+  },
+];

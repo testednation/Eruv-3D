@@ -18,6 +18,12 @@ import { QuizModal } from './components/ui/QuizModal';
 import { GlossaryModal } from './components/ui/GlossaryModal';
 import { OfflineDeployModal } from './components/ui/OfflineDeployModal';
 import { OfflineBanner } from './components/ui/OfflineBanner';
+import { DailyHalachaSection } from './components/ui/DailyHalachaSection';
+import { TutorialModal } from './components/ui/TutorialModal';
+import { KosherRulesModal } from './components/ui/KosherRulesModal';
+import { AchievementsOverlay } from './components/ui/AchievementsOverlay';
+import { AchievementToast } from './components/ui/AchievementToast';
+import { useAchievements } from './hooks/useAchievements';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { soundManager } from './utils/audio';
 
@@ -27,13 +33,49 @@ export default function App() {
   const [selectedTask, setSelectedTask] = useState<EruvInspectionTask | null>(null);
   const [showVirtualWalls, setShowVirtualWalls] = useState<boolean>(true);
   const [isGlossaryOpen, setIsGlossaryOpen] = useState<boolean>(false);
+  const [glossaryInitialQuery, setGlossaryInitialQuery] = useState<string>('');
   const [isOfflineModalOpen, setIsOfflineModalOpen] = useState<boolean>(false);
+  const [isTutorialOpen, setIsTutorialOpen] = useState<boolean>(false);
+  const [tutorialInitialStep, setTutorialInitialStep] = useState<number>(0);
+  const [isKosherRulesOpen, setIsKosherRulesOpen] = useState<boolean>(false);
+  const [isAchievementsOpen, setIsAchievementsOpen] = useState<boolean>(false);
   const [isSimulatedOffline, setIsSimulatedOffline] = useState<boolean>(false);
   const [minutesToShabbat, setMinutesToShabbat] = useState<number>(48);
 
-  const isOnline = useOnlineStatus(isSimulatedOffline);
+  const handleOpenGlossary = (term?: string) => {
+    setGlossaryInitialQuery(term || '');
+    setIsGlossaryOpen(true);
+  };
 
+  const isOnline = useOnlineStatus(isSimulatedOffline);
   const sceneRef = useRef<TownScene | null>(null);
+
+  // Achievements system
+  const {
+    achievements,
+    recentlyUnlocked,
+    dismissToast,
+    unlockAchievement,
+    updateProgress,
+    resetAllAchievements,
+    unlockedCount,
+    totalCount,
+    totalPoints,
+    maxPoints,
+  } = useAchievements();
+
+  // First time visitor prompt: auto-show beginner tutorial
+  useEffect(() => {
+    try {
+      const hasSeen = localStorage.getItem('eruv_tutorial_seen');
+      if (!hasSeen) {
+        setIsTutorialOpen(true);
+        localStorage.setItem('eruv_tutorial_seen', 'true');
+      }
+    } catch {
+      // Fallback
+    }
+  }, []);
 
   // Derived: map of fixed tasks
   const fixedTasksMap = tasks.reduce((acc, t) => {
@@ -55,6 +97,7 @@ export default function App() {
   // Trigger celebration on reaching Kosher status
   useEffect(() => {
     if (isKosher) {
+      unlockAchievement('eruv-certified');
       soundManager.playCelebration();
       try {
         confetti({
@@ -67,7 +110,7 @@ export default function App() {
         // Fallback
       }
     }
-  }, [isKosher]);
+  }, [isKosher, unlockAchievement]);
 
   // Handle task repair
   const handleFixTask = (taskId: string) => {
@@ -77,6 +120,11 @@ export default function App() {
     if (selectedTask && selectedTask.id === taskId) {
       setSelectedTask(prev => (prev ? { ...prev, fixed: true } : null));
     }
+
+    // Achievements progress tracking
+    unlockAchievement('first-fix');
+    const newFixedCount = tasks.filter(t => t.fixed || t.id === taskId).length;
+    updateProgress('eruv-certified', newFixedCount);
   };
 
   // Jump camera to task
@@ -136,6 +184,32 @@ export default function App() {
     }
   };
 
+  const handleToggleVirtualWalls = () => {
+    soundManager.playClick();
+    const nextState = !showVirtualWalls;
+    setShowVirtualWalls(nextState);
+    if (nextState) {
+      unlockAchievement('virtual-walls');
+    }
+  };
+
+  const handleOpenOfflineModal = () => {
+    soundManager.playClick();
+    setIsOfflineModalOpen(true);
+    unlockAchievement('offline-ready');
+  };
+
+  const handleModeChange = (mode: AppMode) => {
+    setCurrentMode(mode);
+    if (mode === 'infographics') {
+      updateProgress('infographics-scholar', 1);
+    } else if (mode === 'domains') {
+      updateProgress('domains-master', 1);
+    } else if (mode === 'daily-halacha') {
+      unlockAchievement('daily-learner');
+    }
+  };
+
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-slate-950 font-sans">
       {/* 3D Scene Viewport: Kept alive across modes to prevent WebGL tear-down */}
@@ -163,13 +237,23 @@ export default function App() {
           minutesToShabbat={minutesToShabbat}
           onJumpToTask={handleJumpToTask}
           onResetGame={handleResetGame}
+          onOpenTutorial={() => {
+            setTutorialInitialStep(0);
+            setIsTutorialOpen(true);
+          }}
+          onOpenAchievements={() => setIsAchievementsOpen(true)}
+          onOpenKosherVisualizer={() => setIsKosherRulesOpen(true)}
+          onOpenGlossary={handleOpenGlossary}
+          unlockedBadgesCount={unlockedCount}
         />
       )}
 
       {/* Mode 2: Halachic Architecture Sandbox */}
       {currentMode === 'sandbox' && (
         <div className="relative z-20 w-full h-full pt-4 pb-24 overflow-y-auto">
-          <SandboxControls />
+          <SandboxControls
+            onKosherDoorwayBuilt={() => unlockAchievement('sandbox-architect')}
+          />
         </div>
       )}
 
@@ -194,31 +278,62 @@ export default function App() {
         </div>
       )}
 
+      {/* Mode 6: Daily Halacha Section */}
+      {currentMode === 'daily-halacha' && (
+        <div className="relative z-20 w-full h-full pt-4 pb-24 overflow-y-auto">
+          <DailyHalachaSection />
+        </div>
+      )}
+
       {/* Offline Status Banner */}
       <OfflineBanner
         isOnline={isOnline}
-        onOpenDeployModal={() => setIsOfflineModalOpen(true)}
+        onOpenDeployModal={handleOpenOfflineModal}
       />
 
       {/* Universal Collapsible Bottom Control Dock (Consolidated controls, zero side occlusion) */}
       <CollapsibleDock
         currentMode={currentMode}
-        onSelectMode={setCurrentMode}
+        onSelectMode={handleModeChange}
         isKosher={isKosher}
         fixedTasksCount={fixedCount}
         totalTasksCount={tasks.length}
         showVirtualWalls={showVirtualWalls}
-        onToggleVirtualWalls={() => setShowVirtualWalls(!showVirtualWalls)}
+        onToggleVirtualWalls={handleToggleVirtualWalls}
         onCameraPreset={handleCameraPreset}
-        onOpenGlossary={() => setIsGlossaryOpen(true)}
-        onOpenOfflineModal={() => setIsOfflineModalOpen(true)}
+        onOpenGlossary={() => handleOpenGlossary('')}
+        onOpenOfflineModal={handleOpenOfflineModal}
+        onOpenTutorial={() => {
+          setTutorialInitialStep(0);
+          setIsTutorialOpen(true);
+        }}
+        onOpenAchievements={() => setIsAchievementsOpen(true)}
+        unlockedBadgesCount={unlockedCount}
         isOnline={isOnline}
       />
 
-      {/* Hebrew / English Eruv Glossary Modal */}
+      {/* Interactive Beginner Tutorial Modal */}
+      <TutorialModal
+        isOpen={isTutorialOpen}
+        onClose={() => setIsTutorialOpen(false)}
+        onOpenAchievements={() => setIsAchievementsOpen(true)}
+        initialStep={tutorialInitialStep}
+      />
+
+      {/* Dedicated Real-Time Kosher vs. Pasul Rules Modal */}
+      <KosherRulesModal
+        isOpen={isKosherRulesOpen}
+        onClose={() => setIsKosherRulesOpen(false)}
+      />
+
+      {/* Hebrew / English Eruv Glossary Modal with Real-Time Search */}
       <GlossaryModal
         isOpen={isGlossaryOpen}
-        onClose={() => setIsGlossaryOpen(false)}
+        onClose={() => {
+          setIsGlossaryOpen(false);
+          setGlossaryInitialQuery('');
+        }}
+        initialQuery={glossaryInitialQuery}
       />
 
       {/* Deploy App Offline & PWA Installation Modal */}
@@ -228,6 +343,25 @@ export default function App() {
         isSimulatedOffline={isSimulatedOffline}
         onToggleSimulatedOffline={setIsSimulatedOffline}
         isOnline={isOnline}
+      />
+
+      {/* Achievements Overlay & Badge Gallery */}
+      <AchievementsOverlay
+        isOpen={isAchievementsOpen}
+        onClose={() => setIsAchievementsOpen(false)}
+        achievements={achievements}
+        unlockedCount={unlockedCount}
+        totalCount={totalCount}
+        totalPoints={totalPoints}
+        maxPoints={maxPoints}
+        onResetAchievements={resetAllAchievements}
+      />
+
+      {/* Achievement Unlocked Toast Notification */}
+      <AchievementToast
+        achievement={recentlyUnlocked}
+        onClose={dismissToast}
+        onOpenOverlay={() => setIsAchievementsOpen(true)}
       />
     </div>
   );

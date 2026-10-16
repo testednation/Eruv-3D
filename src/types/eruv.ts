@@ -1,4 +1,4 @@
-export type AppMode = 'game' | 'sandbox' | 'domains' | 'infographics' | 'quiz';
+export type AppMode = 'game' | 'sandbox' | 'domains' | 'infographics' | 'quiz' | 'daily-halacha';
 
 export interface EruvInspectionTask {
   id: string;

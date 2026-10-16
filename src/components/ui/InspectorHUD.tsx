@@ -9,11 +9,16 @@ import {
   Info, 
   Sparkles, 
   ArrowRight,
-  BookMarked
+  BookMarked,
+  HelpCircle,
+  Eye,
+  Search
 } from 'lucide-react';
 import { EruvInspectionTask } from '../../types/eruv';
 import { soundManager } from '../../utils/audio';
 import { DailyHalachaCard } from './DailyHalachaCard';
+import { DidYouKnowCard } from './DidYouKnowCard';
+import { KosherVisualizer } from './KosherVisualizer';
 
 interface InspectorHUDProps {
   tasks: EruvInspectionTask[];
@@ -24,6 +29,11 @@ interface InspectorHUDProps {
   minutesToShabbat: number;
   onJumpToTask: (task: EruvInspectionTask) => void;
   onResetGame: () => void;
+  onOpenTutorial: () => void;
+  onOpenAchievements: () => void;
+  onOpenKosherVisualizer?: () => void;
+  onOpenGlossary?: (term?: string) => void;
+  unlockedBadgesCount?: number;
 }
 
 export const InspectorHUD: React.FC<InspectorHUDProps> = ({
@@ -35,6 +45,11 @@ export const InspectorHUD: React.FC<InspectorHUDProps> = ({
   minutesToShabbat,
   onJumpToTask,
   onResetGame,
+  onOpenTutorial,
+  onOpenAchievements,
+  onOpenKosherVisualizer,
+  onOpenGlossary,
+  unlockedBadgesCount = 0,
 }) => {
   const fixedCount = tasks.filter(t => t.fixed).length;
 
@@ -53,20 +68,81 @@ export const InspectorHUD: React.FC<InspectorHUDProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="font-serif font-bold text-base tracking-wide text-white">Eruv Inspector</h1>
-                {/* Clean, static badge - NO pulsating dots */}
-                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                  isKosher 
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' 
-                    : 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
-                }`}>
+                {/* Clean, static badge - click to open real-time kosher guide */}
+                <button
+                  onClick={() => {
+                    soundManager.playClick();
+                    if (onOpenKosherVisualizer) onOpenKosherVisualizer();
+                    else onOpenTutorial();
+                  }}
+                  className={`text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider cursor-pointer hover:opacity-90 transition-opacity ${
+                    isKosher 
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' 
+                      : 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+                  }`}
+                  title="Click to view real-time Kosher vs. Pasul architectural rules"
+                >
                   {isKosher ? '🟢 KOSHER (Carrying Permitted)' : '🔴 PASUL (No Carrying)'}
-                </span>
+                </button>
               </div>
               <p className="text-xs text-slate-300 mt-0.5">
                 {isKosher
                   ? 'Mazal Tov! All boundaries and communal meal verified for Shabbat.'
                   : `Inspect the town perimeter and resolve ${tasks.length - fixedCount} halachic breaches before sunset.`}
               </p>
+
+              {/* Quick Actions: Tutorial, Kosher Visualizer & Badges */}
+              <div className="flex flex-wrap items-center gap-2 mt-2 pt-2 border-t border-slate-800">
+                <button
+                  onClick={() => {
+                    soundManager.playClick();
+                    onOpenTutorial();
+                  }}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-amber-300 font-semibold transition-colors cursor-pointer"
+                >
+                  <HelpCircle className="w-3.5 h-3.5" />
+                  <span>Tutorial</span>
+                </button>
+
+                {onOpenKosherVisualizer && (
+                  <button
+                    onClick={() => {
+                      soundManager.playClick();
+                      onOpenKosherVisualizer();
+                    }}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-xs text-emerald-300 font-semibold transition-colors cursor-pointer"
+                    title="Real-time illustrations of Kosher vs. Pasul rules"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Kosher Rules</span>
+                  </button>
+                )}
+
+                {onOpenGlossary && (
+                  <button
+                    onClick={() => {
+                      soundManager.playClick();
+                      onOpenGlossary();
+                    }}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-xs text-sky-300 font-semibold transition-colors cursor-pointer"
+                    title="Real-time search Eruv & Shabbat Glossary"
+                  >
+                    <BookMarked className="w-3.5 h-3.5" />
+                    <span>Glossary</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => {
+                    soundManager.playClick();
+                    onOpenAchievements();
+                  }}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-xs text-amber-300 font-semibold transition-colors cursor-pointer"
+                >
+                  <span>🏆</span>
+                  <span>Badges ({unlockedBadgesCount}/10)</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -100,13 +176,14 @@ export const InspectorHUD: React.FC<InspectorHUDProps> = ({
         </div>
       </div>
 
-      {/* Daily Halacha Card (Main Dashboard Top-Right) */}
-      <div className="absolute top-24 right-4 z-20 pointer-events-auto max-w-sm">
+      {/* Educational Knowledge Panels (Main Dashboard Top-Right) */}
+      <div className="absolute top-24 right-4 z-20 pointer-events-auto max-w-sm w-full flex flex-col gap-2.5 max-h-[82vh] overflow-y-auto pr-0.5">
         <DailyHalachaCard />
+        <DidYouKnowCard />
       </div>
 
       {/* Task Quick Navigation Bar (Top-left below header) */}
-      <div className="absolute top-24 left-4 z-20 pointer-events-auto flex flex-col gap-1.5 max-w-xs">
+      <div className="absolute top-28 left-4 z-20 pointer-events-auto flex flex-col gap-1.5 max-w-xs">
         <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 ml-1">
           Perimeter Inspection Points:
         </div>
@@ -145,7 +222,7 @@ export const InspectorHUD: React.FC<InspectorHUDProps> = ({
       {/* Interactive Active Inspection Modal / Inspector Workbench */}
       {selectedTask && (
         <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm pointer-events-auto animate-fade-in">
-          <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 shadow-2xl max-w-lg w-full text-slate-100">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 shadow-2xl max-w-lg w-full text-slate-100 max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex items-start justify-between gap-3 border-b border-slate-800 pb-3">
               <div>
@@ -172,9 +249,41 @@ export const InspectorHUD: React.FC<InspectorHUDProps> = ({
             {/* Hebrew Halachic Title */}
             <div className="my-3 px-3 py-2 bg-slate-800/60 rounded-xl border border-slate-700/60 flex items-center justify-between">
               <span className="text-xs text-slate-400">Talmudic / Halachic Category:</span>
-              <span className="text-sm font-semibold text-amber-300 font-serif" dir="rtl">
-                {selectedTask.hebrewTerm}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-amber-300 font-serif" dir="rtl">
+                  {selectedTask.hebrewTerm}
+                </span>
+                {onOpenGlossary && (
+                  <button
+                    onClick={() => {
+                      soundManager.playClick();
+                      const termQuery = selectedTask.id === 'broken-wire' ? 'Pirtzah' :
+                        selectedTask.id === 'side-attachment' ? 'Tzurat HaPetach' :
+                        selectedTask.id === 'leaning-pole' ? 'Lechi' :
+                        selectedTask.id === 'large-gap' ? 'Tzurat HaPetach' :
+                        selectedTask.id === 'eruv-chatzerot' ? 'Eruv Chatzerot' : 'Tzurat HaPetach';
+                      onOpenGlossary(termQuery);
+                    }}
+                    className="p-1 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 text-xs transition-colors flex items-center gap-1 cursor-pointer"
+                    title="Search this term in the Glossary"
+                  >
+                    <Search className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Real-Time Pictorial Kosher vs. Pasul Visualizer */}
+            <div className="my-3">
+              <KosherVisualizer
+                currentRule={
+                  selectedTask.id === 'broken-wire' ? 'broken' :
+                  selectedTask.id === 'side-attachment' ? 'overhead' :
+                  selectedTask.id === 'leaning-pole' ? 'leaning' :
+                  selectedTask.id === 'eruv-chatzerot' ? 'matzah' : 'overhead'
+                }
+                isCompact={true}
+              />
             </div>
 
             {/* Description & Scenario */}

@@ -60,10 +60,13 @@ const FALLBACK_HALACHOT = [
 app.get('/api/daily-halacha', async (req, res) => {
   try {
     const todayStr = new Date().toISOString().split('T')[0];
+    const topic = (req.query.topic as string) || '';
 
     // Check if API key is configured
     if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'MY_GEMINI_API_KEY') {
-      const fallback = FALLBACK_HALACHOT[Math.floor(Math.random() * FALLBACK_HALACHOT.length)];
+      const fallback = topic
+        ? (FALLBACK_HALACHOT.find(h => h.title.toLowerCase().includes(topic.toLowerCase()) || h.law.toLowerCase().includes(topic.toLowerCase())) || FALLBACK_HALACHOT[0])
+        : FALLBACK_HALACHOT[Math.floor(Math.random() * FALLBACK_HALACHOT.length)];
       return res.json({
         success: true,
         halacha: fallback,
@@ -75,8 +78,12 @@ app.get('/api/daily-halacha', async (req, res) => {
       });
     }
 
+    const topicFocus = topic
+      ? `Focus specifically on the halachic rules of: "${topic}" regarding carrying on Shabbat or Eruv construction.`
+      : `Focus on practical halachic topics like Tzurat HaPetach (doorway form), Al Gabav (overhead wire alignment), Lavud (gaps under 3 tefachim), Gud Asek (virtual walls), carrying strollers or keys, Friday inspections, or Eruv Chatzerot.`;
+
     const prompt = `Search for an authentic, concise, and beginner-friendly halacha (Jewish law) regarding Eruvin (the Shabbat boundary/carrying laws) for today (${todayStr}).
-Focus on practical halachic topics like Tzurat HaPetach (doorway form), Al Gabav (overhead wire alignment), Lavud (gaps under 3 tefachim), Gud Asek (virtual walls), carrying strollers or keys, Friday inspections, or Eruv Chatzerot.
+${topicFocus}
 
 Respond ONLY with valid JSON in this exact structure:
 {

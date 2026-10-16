@@ -9,10 +9,15 @@ import {
   Sparkles, 
   ShieldCheck, 
   ShieldAlert,
-  HelpCircle
+  HelpCircle,
+  Eye
 } from 'lucide-react';
 
-export const SandboxControls: React.FC = () => {
+interface SandboxControlsProps {
+  onKosherDoorwayBuilt?: () => void;
+}
+
+export const SandboxControls: React.FC<SandboxControlsProps> = ({ onKosherDoorwayBuilt }) => {
   // Sandbox parameters
   const [wirePosition, setWirePosition] = useState<'overhead' | 'side' | 'offset'>('overhead');
   const [postHeightTefachim, setPostHeightTefachim] = useState<number>(12); // min 10
@@ -26,6 +31,12 @@ export const SandboxControls: React.FC = () => {
   const isGapValid = gapWidthAmot <= 10 || isOverheadValid;
   const isLavudValid = slatDistanceInches <= 9.4;
   const isOverallKosher = isOverheadValid && isHeightValid && isGapValid && hasMatzah;
+
+  React.useEffect(() => {
+    if (isOverallKosher && onKosherDoorwayBuilt) {
+      onKosherDoorwayBuilt();
+    }
+  }, [isOverallKosher, onKosherDoorwayBuilt]);
 
   return (
     <div className="relative w-full max-w-5xl mx-auto p-4 sm:p-6 text-slate-100 overflow-y-auto max-h-[82vh]">
@@ -78,6 +89,155 @@ export const SandboxControls: React.FC = () => {
               <div className="text-xs font-mono text-amber-300">Talmud Eruvin 11b</div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Real-Time Live Architectural Diagram */}
+      <div className="mb-6 p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl">
+        <div className="flex items-center justify-between mb-3 border-b border-slate-800 pb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-sky-400">
+              Live Architectural Blueprint
+            </span>
+            <span className="text-[10px] text-slate-400">(Updates in Real-Time as you move controls)</span>
+          </div>
+
+          <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
+            isOverallKosher ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+          }`}>
+            {isOverallKosher ? '✓ KOSHER GEOMETRY' : '✕ PASUL GEOMETRY'}
+          </span>
+        </div>
+
+        {/* Dynamic SVG Canvas */}
+        <div className="bg-slate-950 rounded-2xl p-4 border border-slate-800/80 flex items-center justify-center overflow-x-auto">
+          <svg viewBox="0 0 460 200" className="w-full max-w-xl h-auto">
+            {/* Ground Line */}
+            <line x1="20" y1="180" x2="440" y2="180" stroke="#475569" strokeWidth="4" />
+            <text x="230" y="195" fill="#64748b" fontSize="9" textAnchor="middle">Ground Line (Karka Olam)</text>
+
+            {/* Post Height calculation: 10 tefachim is ~80px tall, scaled */}
+            {(() => {
+              const svgHeight = Math.min(130, Math.max(35, postHeightTefachim * 7.5));
+              const postTopY = 180 - svgHeight;
+              const leftPostX = 80;
+              const rightPostX = 360;
+
+              // Wire Y coordinates
+              let wireY = postTopY - 4;
+              let wireStartX = 50;
+              let wireEndX = 390;
+              let wireColor = isOverallKosher ? '#10b981' : '#ef4444';
+
+              if (wirePosition === 'side') {
+                wireY = postTopY + 24; // Side bracket lower down
+              } else if (wirePosition === 'offset') {
+                wireStartX = 110; // Shifted sideways
+                wireEndX = 420;
+              }
+
+              return (
+                <g>
+                  {/* Virtual Halachic Wall (Gud Asek) */}
+                  <rect
+                    x={leftPostX + 16}
+                    y={postTopY}
+                    width={rightPostX - (leftPostX + 16)}
+                    height={svgHeight}
+                    fill={isOverallKosher ? '#10b981' : '#ef4444'}
+                    opacity={isOverallKosher ? 0.15 : 0.05}
+                    stroke={isOverallKosher ? '#10b981' : '#ef4444'}
+                    strokeDasharray={isOverallKosher ? 'none' : '4 4'}
+                    strokeWidth="1"
+                  />
+                  <text x="225" y={180 - svgHeight / 2} fill={isOverallKosher ? '#10b981' : '#ef4444'} fontSize="10" fontWeight="bold" textAnchor="middle">
+                    {isOverallKosher ? 'GUD ASEK (Virtual Wall Active)' : 'VIRTUAL WALL BREACHED'}
+                  </text>
+
+                  {/* Left Post */}
+                  <rect
+                    x={leftPostX}
+                    y={postTopY}
+                    width="16"
+                    height={svgHeight}
+                    rx="3"
+                    fill={isHeightValid ? '#38bdf8' : '#ef4444'}
+                  />
+                  {/* Left Top Cap */}
+                  <rect
+                    x={leftPostX - 2}
+                    y={postTopY - 4}
+                    width="20"
+                    height="6"
+                    rx="1"
+                    fill="#94a3b8"
+                  />
+
+                  {/* Right Post */}
+                  <rect
+                    x={rightPostX}
+                    y={postTopY}
+                    width="16"
+                    height={svgHeight}
+                    rx="3"
+                    fill={isHeightValid ? '#38bdf8' : '#ef4444'}
+                  />
+                  {/* Right Top Cap */}
+                  <rect
+                    x={rightPostX - 2}
+                    y={postTopY - 4}
+                    width="20"
+                    height="6"
+                    rx="1"
+                    fill="#94a3b8"
+                  />
+
+                  {/* Side brackets if wirePosition is side */}
+                  {wirePosition === 'side' && (
+                    <>
+                      <rect x={leftPostX + 16} y={wireY - 2} width="12" height="6" fill="#ef4444" />
+                      <rect x={rightPostX + 16} y={wireY - 2} width="12" height="6" fill="#ef4444" />
+                    </>
+                  )}
+
+                  {/* The Overhead Wire */}
+                  <line
+                    x1={wireStartX}
+                    y1={wireY}
+                    x2={wireEndX}
+                    y2={wireY}
+                    stroke={wireColor}
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                  />
+
+                  {/* Wire Attachment Marker Dots */}
+                  <circle cx={leftPostX + 8} cy={wirePosition === 'side' ? wireY : postTopY - 4} r="4" fill={isOverheadValid ? '#10b981' : '#ef4444'} />
+                  <circle cx={rightPostX + 8} cy={wirePosition === 'side' ? wireY : postTopY - 4} r="4" fill={isOverheadValid ? '#10b981' : '#ef4444'} />
+
+                  {/* Height Indicator Label */}
+                  <line x1="60" y1={postTopY} x2="60" y2="180" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
+                  <text x="50" y={180 - svgHeight / 2} fill={isHeightValid ? '#38bdf8' : '#ef4444'} fontSize="9" fontWeight="bold" textAnchor="middle">
+                    {postHeightTefachim}T
+                  </text>
+
+                  {/* Width Indicator Label */}
+                  <line x1={leftPostX} y1="170" x2={rightPostX + 16} y2="170" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
+                  <text x="225" y="165" fill="#94a3b8" fontSize="9" textAnchor="middle">
+                    Gap: {gapWidthAmot} Amot
+                  </text>
+                </g>
+              );
+            })()}
+
+            {/* Matzah Box Status Badge inside graphic */}
+            <g transform="translate(385, 20)">
+              <rect x="0" y="0" width="60" height="26" rx="4" fill="#0f172a" stroke={hasMatzah ? '#10b981' : '#ef4444'} strokeWidth="1.5" />
+              <text x="30" y="16" fill={hasMatzah ? '#10b981' : '#ef4444'} fontSize="8" fontWeight="bold" textAnchor="middle">
+                {hasMatzah ? '🍞 Matzah ✓' : '🍞 Missing ✕'}
+              </text>
+            </g>
+          </svg>
         </div>
       </div>
 
