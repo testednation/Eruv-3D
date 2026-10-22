@@ -43,10 +43,14 @@ export class TownScene {
   private mouse = new THREE.Vector2();
   private interactiveObjects: THREE.Object3D[] = [];
 
-  // Orbit control emulation / dragging
+  // Orbit control emulation / dragging & touch gestures
   private isDragging = false;
   private previousMousePosition = { x: 0, y: 0 };
   private spherical = { radius: 30, theta: 0.8, phi: 1.1 };
+  private touchPinchDistance: number = 0;
+  private touchStartTime: number = 0;
+  private touchStartPos = { x: 0, y: 0 };
+  private hasMovedSignificantly = false;
 
   constructor(container: HTMLElement, callbacks: SceneCallbacks) {
     this.container = container;
@@ -1048,27 +1052,105 @@ export class TownScene {
       this.desiredCameraPos.set(x, y, z);
     }, { passive: false });
 
-    // Click raycasting
+    // Click raycasting (Desktop mouse)
     el.addEventListener('click', (e) => {
       const rect = el.getBoundingClientRect();
       this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      this.performRaycast();
+    });
 
-      this.raycaster.setFromCamera(this.mouse, this.camera);
-      const intersects = this.raycaster.intersectObjects(this.interactiveObjects, true);
-
-      if (intersects.length > 0) {
-        const hit = intersects[0].object;
-        if (hit.userData.poleIndex !== undefined) {
-          this.callbacks.onPoleClick?.(hit.userData.poleIndex);
-        } else if (hit.userData.isSynagogue) {
-          this.callbacks.onSynagogueClick?.();
-        }
+    // Touch event listeners for Mobile support
+    el.addEventListener('touchstart', (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        this.isDragging = true;
+        const touch = e.touches[0];
+        this.previousMousePosition = { x: touch.clientX, y: touch.clientY };
+        this.touchStartPos = { x: touch.clientX, y: touch.clientY };
+        this.touchStartTime = Date.now();
+        this.hasMovedSignificantly = false;
+      } else if (e.touches.length === 2) {
+        this.isDragging = false;
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        this.touchPinchDistance = Math.hypot(dx, dy);
       }
+    }, { passive: true });
+
+    el.addEventListener('touchmove', (e: TouchEvent) => {
+      // Prevent browser scroll or rubber-banding while navigating the 3D scene
+      if (e.cancelable) e.preventDefault();
+
+      if (e.touches.length === 1 && this.isDragging) {
+        const touch = e.touches[0];
+        const deltaX = touch.clientX - this.previousMousePosition.x;
+        const deltaY = touch.clientY - this.previousMousePosition.y;
+
+        const moveDist = Math.hypot(touch.clientX - this.touchStartPos.x, touch.clientY - this.touchStartPos.y);
+        if (moveDist > 8) {
+          this.hasMovedSignificantly = true;
+        }
+
+        this.spherical.theta -= deltaX * 0.007;
+        this.spherical.phi = Math.max(0.15, Math.min(Math.PI / 2 - 0.05, this.spherical.phi - deltaY * 0.007));
+
+        const x = this.desiredLookAt.x + this.spherical.radius * Math.sin(this.spherical.phi) * Math.sin(this.spherical.theta);
+        const y = this.desiredLookAt.y + this.spherical.radius * Math.cos(this.spherical.phi);
+        const z = this.desiredLookAt.z + this.spherical.radius * Math.sin(this.spherical.phi) * Math.cos(this.spherical.theta);
+        this.desiredCameraPos.set(x, y, z);
+
+        this.previousMousePosition = { x: touch.clientX, y: touch.clientY };
+      } else if (e.touches.length === 2) {
+        this.hasMovedSignificantly = true;
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const newDist = Math.hypot(dx, dy);
+        const diff = this.touchPinchDistance - newDist;
+
+        this.spherical.radius = Math.max(8, Math.min(60, this.spherical.radius + diff * 0.08));
+        const x = this.desiredLookAt.x + this.spherical.radius * Math.sin(this.spherical.phi) * Math.sin(this.spherical.theta);
+        const y = this.desiredLookAt.y + this.spherical.radius * Math.cos(this.spherical.phi);
+        const z = this.desiredLookAt.z + this.spherical.radius * Math.sin(this.spherical.phi) * Math.cos(this.spherical.theta);
+        this.desiredCameraPos.set(x, y, z);
+
+        this.touchPinchDistance = newDist;
+      }
+    }, { passive: false });
+
+    el.addEventListener('touchend', (e: TouchEvent) => {
+      this.isDragging = false;
+      const duration = Date.now() - this.touchStartTime;
+
+      // Detect clean mobile tap (< 300ms, moved < 10px) to trigger selection
+      if (!this.hasMovedSignificantly && duration < 320 && e.changedTouches.length > 0) {
+        const touch = e.changedTouches[0];
+        const rect = el.getBoundingClientRect();
+        this.mouse.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+        this.mouse.y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
+        this.performRaycast();
+      }
+    });
+
+    el.addEventListener('touchcancel', () => {
+      this.isDragging = false;
     });
 
     // Window resize
     window.addEventListener('resize', this.onResize);
+  }
+
+  private performRaycast() {
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    const intersects = this.raycaster.intersectObjects(this.interactiveObjects, true);
+
+    if (intersects.length > 0) {
+      const hit = intersects[0].object;
+      if (hit.userData.poleIndex !== undefined) {
+        this.callbacks.onPoleClick?.(hit.userData.poleIndex);
+      } else if (hit.userData.isSynagogue) {
+        this.callbacks.onSynagogueClick?.();
+      }
+    }
   }
 
   private onResize = () => {

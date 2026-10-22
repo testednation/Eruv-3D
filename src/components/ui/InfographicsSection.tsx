@@ -34,7 +34,7 @@ export const InfographicsSection: React.FC = () => {
   ];
 
   return (
-    <div className="relative w-full max-w-6xl mx-auto p-4 sm:p-6 text-slate-100 overflow-y-auto max-h-[82vh]">
+    <div className="relative w-full max-w-6xl mx-auto p-3 sm:p-6 text-slate-100">
       {/* Header */}
       <div className="text-center max-w-2xl mx-auto mb-6">
         <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-800">

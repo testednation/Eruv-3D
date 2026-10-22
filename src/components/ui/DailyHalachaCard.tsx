@@ -152,10 +152,17 @@ export const DailyHalachaCard: React.FC = () => {
               )}
 
               {/* Source Citation */}
-              <div className="pt-1.5 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400">
-                <div className="flex items-center gap-1 font-mono">
-                  <BookMarked className="w-3 h-3 text-sky-400 shrink-0" />
-                  <span className="truncate text-slate-300">{halacha.source}</span>
+              <div className="pt-2 border-t border-slate-800">
+                <div className="flex items-center gap-1.5 p-2 bg-slate-800/80 rounded-xl border border-slate-700/60 text-[10px]">
+                  <ScrollText className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[9px] uppercase tracking-wider text-slate-400 block font-sans">
+                      Shulchan Aruch & Classical Authority:
+                    </span>
+                    <span className="font-mono text-amber-300 font-semibold truncate block">
+                      {halacha.source}
+                    </span>
+                  </div>
                 </div>
               </div>
 

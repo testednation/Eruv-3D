@@ -111,7 +111,7 @@ export const DailyHalachaSection: React.FC = () => {
   });
 
   return (
-    <div className="relative w-full max-w-5xl mx-auto p-4 sm:p-6 text-slate-100 overflow-y-auto max-h-[82vh]">
+    <div className="relative w-full max-w-5xl mx-auto p-3 sm:p-6 text-slate-100">
       {/* Section Header */}
       <div className="text-center max-w-2xl mx-auto mb-6">
         <div className="flex items-center justify-center gap-2 mb-2">

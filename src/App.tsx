@@ -21,6 +21,8 @@ import { OfflineBanner } from './components/ui/OfflineBanner';
 import { DailyHalachaSection } from './components/ui/DailyHalachaSection';
 import { TutorialModal } from './components/ui/TutorialModal';
 import { KosherRulesModal } from './components/ui/KosherRulesModal';
+import { StudyHubModal } from './components/ui/StudyHubModal';
+import { MobileNavDrawer } from './components/ui/MobileNavDrawer';
 import { AchievementsOverlay } from './components/ui/AchievementsOverlay';
 import { AchievementToast } from './components/ui/AchievementToast';
 import { useAchievements } from './hooks/useAchievements';
@@ -39,12 +41,31 @@ export default function App() {
   const [tutorialInitialStep, setTutorialInitialStep] = useState<number>(0);
   const [isKosherRulesOpen, setIsKosherRulesOpen] = useState<boolean>(false);
   const [isAchievementsOpen, setIsAchievementsOpen] = useState<boolean>(false);
+  const [isStudyHubOpen, setIsStudyHubOpen] = useState<boolean>(false);
+  const [studyHubTab, setStudyHubTab] = useState<'daily' | 'sources' | 'facts' | 'rules'>('daily');
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState<boolean>(false);
+  const [soundActive, setSoundActive] = useState<boolean>(true);
   const [isSimulatedOffline, setIsSimulatedOffline] = useState<boolean>(false);
   const [minutesToShabbat, setMinutesToShabbat] = useState<number>(48);
 
   const handleOpenGlossary = (term?: string) => {
     setGlossaryInitialQuery(term || '');
     setIsGlossaryOpen(true);
+  };
+
+  const handleOpenStudyHub = (tab: 'daily' | 'sources' | 'facts' | 'rules' = 'daily') => {
+    soundManager.playClick();
+    setStudyHubTab(tab);
+    setIsStudyHubOpen(true);
+    unlockAchievement('daily-learner');
+  };
+
+  const handleToggleSound = () => {
+    soundManager.enabled = !soundActive;
+    setSoundActive(!soundActive);
+    if (!soundActive) {
+      soundManager.playClick();
+    }
   };
 
   const isOnline = useOnlineStatus(isSimulatedOffline);
@@ -244,6 +265,9 @@ export default function App() {
           onOpenAchievements={() => setIsAchievementsOpen(true)}
           onOpenKosherVisualizer={() => setIsKosherRulesOpen(true)}
           onOpenGlossary={handleOpenGlossary}
+          onOpenStudyHub={() => handleOpenStudyHub('daily')}
+          onOpenMobileMenu={() => setIsMobileNavOpen(true)}
+          onCameraPreset={handleCameraPreset}
           unlockedBadgesCount={unlockedCount}
         />
       )}
@@ -291,7 +315,7 @@ export default function App() {
         onOpenDeployModal={handleOpenOfflineModal}
       />
 
-      {/* Universal Collapsible Bottom Control Dock (Consolidated controls, zero side occlusion) */}
+      {/* Universal Collapsible Bottom Control Dock (Consolidated controls, mobile & desktop optimized) */}
       <CollapsibleDock
         currentMode={currentMode}
         onSelectMode={handleModeChange}
@@ -308,6 +332,42 @@ export default function App() {
           setIsTutorialOpen(true);
         }}
         onOpenAchievements={() => setIsAchievementsOpen(true)}
+        onOpenStudyHub={() => handleOpenStudyHub('daily')}
+        unlockedBadgesCount={unlockedCount}
+        isOnline={isOnline}
+      />
+
+      {/* Halachic Study Center Modal (Daily Halacha, Did You Know Facts, Kosher Rules) */}
+      <StudyHubModal
+        isOpen={isStudyHubOpen}
+        onClose={() => setIsStudyHubOpen(false)}
+        initialTab={studyHubTab}
+        onOpenGlossary={handleOpenGlossary}
+      />
+
+      {/* Mobile Slide-Over Navigation Drawer */}
+      <MobileNavDrawer
+        isOpen={isMobileNavOpen}
+        onClose={() => setIsMobileNavOpen(false)}
+        isKosher={isKosher}
+        fixedCount={fixedCount}
+        totalTasks={tasks.length}
+        minutesToShabbat={minutesToShabbat}
+        showVirtualWalls={showVirtualWalls}
+        onToggleVirtualWalls={handleToggleVirtualWalls}
+        soundActive={soundActive}
+        onToggleSound={handleToggleSound}
+        onCameraPreset={handleCameraPreset}
+        onOpenTutorial={() => {
+          setTutorialInitialStep(0);
+          setIsTutorialOpen(true);
+        }}
+        onOpenAchievements={() => setIsAchievementsOpen(true)}
+        onOpenGlossary={() => handleOpenGlossary('')}
+        onOpenStudyHub={() => handleOpenStudyHub('daily')}
+        onOpenKosherRules={() => setIsKosherRulesOpen(true)}
+        onOpenOfflineModal={handleOpenOfflineModal}
+        onResetGame={handleResetGame}
         unlockedBadgesCount={unlockedCount}
         isOnline={isOnline}
       />

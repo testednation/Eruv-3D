@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckCircle2, XCircle, Info, ChevronRight, Sparkles } from 'lucide-react';
+import { CheckCircle2, XCircle, Info, ChevronRight, Sparkles, ScrollText, BookMarked } from 'lucide-react';
 import { soundManager } from '../../utils/audio';
 
 export interface KosherRuleComparison {
@@ -11,6 +11,10 @@ export interface KosherRuleComparison {
   pasulLabel: string;
   pasulDesc: string;
   type: 'overhead' | 'broken' | 'leaning' | 'lavud' | 'matzah' | 'height';
+  shulchanAruchCitation: string;
+  hebrewCitation: string;
+  halachicSummary: string;
+  mishnahBerurah: string;
 }
 
 export const KOSHER_COMPARISONS: KosherRuleComparison[] = [
@@ -23,6 +27,10 @@ export const KOSHER_COMPARISONS: KosherRuleComparison[] = [
     pasulLabel: 'PASUL: Attached to Side Bracket',
     pasulDesc: 'Fastening the wire to an eyebolt or screw on the side of the pole fails the architectural form of a doorway.',
     type: 'overhead',
+    shulchanAruchCitation: 'Shulchan Aruch, Orach Chayim §362:11',
+    hebrewCitation: 'שו״ע או״ח סימן שס״ב סעיף י״א',
+    halachicSummary: 'A Tzurat HaPetach requires the lintel wire to rest directly over the doorpost tops (Al Gabav), not attached to the side.',
+    mishnahBerurah: 'Mishnah Berurah §362 s.k. 49–65; Biur Halacha s.v. "Al Gabav"',
   },
   {
     id: 'broken',
@@ -33,6 +41,10 @@ export const KOSHER_COMPARISONS: KosherRuleComparison[] = [
     pasulLabel: 'PASUL: Broken or Fallen Cable',
     pasulDesc: 'Even a 1-millimeter gap or broken wire hanging down immediately breaches the private domain for all residents.',
     type: 'broken',
+    shulchanAruchCitation: 'Shulchan Aruch, Orach Chayim §362:10 & §365:1',
+    hebrewCitation: 'שו״ע או״ח סימן שס״ב סעיף י׳ וסימן שס״ה סעיף א׳',
+    halachicSummary: 'A continuous loop is mandatory; a snapped line creates an open breach (Pirtzah), instantly terminating carrying rights.',
+    mishnahBerurah: 'Mishnah Berurah §365 s.k. 1–5; Mishnah Berurah §362 s.k. 46–48',
   },
   {
     id: 'leaning',
@@ -43,6 +55,10 @@ export const KOSHER_COMPARISONS: KosherRuleComparison[] = [
     pasulLabel: 'PASUL: Severe Tilt / Leaning Angle',
     pasulDesc: 'A pole bent or tilted excessively cannot form a valid vertical doorpost plane.',
     type: 'leaning',
+    shulchanAruchCitation: 'Shulchan Aruch, Orach Chayim §363:15',
+    hebrewCitation: 'שו״ע או״ח סימן שס״ג סעיף ט״ו',
+    halachicSummary: 'A Lechi must stand straight and rigid so its vertical plane ascends straight up to meet the overhead cable.',
+    mishnahBerurah: 'Mishnah Berurah §363 s.k. 15, 27',
   },
   {
     id: 'lavud',
@@ -53,6 +69,10 @@ export const KOSHER_COMPARISONS: KosherRuleComparison[] = [
     pasulLabel: 'PASUL: Gap ≥ 3 Tefachim (≥ 9.4 in)',
     pasulDesc: 'Open gaps 3 tefachim or wider are treated as open holes in the perimeter.',
     type: 'lavud',
+    shulchanAruchCitation: 'Shulchan Aruch, Orach Chayim §362:5',
+    hebrewCitation: 'שו״ע או״ח סימן שס״ב סעיף ה׳',
+    halachicSummary: 'By Sinaitic oral law (Halacha LeMoshe MiSinai), any opening or gap under 3 Tefachim is viewed as solid wall.',
+    mishnahBerurah: 'Mishnah Berurah §362 s.k. 23–27',
   },
   {
     id: 'matzah',
@@ -63,6 +83,10 @@ export const KOSHER_COMPARISONS: KosherRuleComparison[] = [
     pasulLabel: 'PASUL: Missing Food Partnership',
     pasulDesc: 'Without the shared food deposit, private homes remain legally isolated and carrying outside is forbidden.',
     type: 'matzah',
+    shulchanAruchCitation: 'Shulchan Aruch, Orach Chayim §366:1–3',
+    hebrewCitation: 'שו״ע או״ח סימן שס״ו סעיפים א׳–ג׳',
+    halachicSummary: 'King Solomon instituted Eruv Chatzerot uniting distinct homes through shared bread, acquired on behalf of all residents.',
+    mishnahBerurah: 'Mishnah Berurah §366 s.k. 8–15; Biur Halacha 366',
   },
 ];
 
@@ -283,6 +307,30 @@ export const KosherVisualizer: React.FC<KosherVisualizerProps> = ({
             <p className="text-[11px] text-rose-200/90 leading-relaxed">
               {activeRule.pasulDesc}
             </p>
+          </div>
+        </div>
+
+        {/* Shulchan Aruch Orach Chayim Source Citation Card */}
+        <div className="mt-4 pt-3 border-t border-slate-800 bg-slate-950/40 rounded-2xl p-3 border border-slate-800/80">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-1.5">
+            <div className="flex items-center gap-2">
+              <span className="p-1 rounded-md bg-amber-500/20 text-amber-400">
+                <ScrollText className="w-3.5 h-3.5" />
+              </span>
+              <span className="text-xs font-mono font-bold text-amber-300">
+                {activeRule.shulchanAruchCitation}
+              </span>
+            </div>
+            <span className="text-[11px] font-serif text-slate-400" dir="rtl">
+              {activeRule.hebrewCitation}
+            </span>
+          </div>
+          <p className="text-[11px] text-slate-300 leading-relaxed mb-1.5">
+            {activeRule.halachicSummary}
+          </p>
+          <div className="flex items-center gap-1.5 text-[10px] text-sky-400/90 font-mono">
+            <BookMarked className="w-3 h-3 shrink-0" />
+            <span>{activeRule.mishnahBerurah}</span>
           </div>
         </div>
       </div>

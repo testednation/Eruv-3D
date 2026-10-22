@@ -16,6 +16,15 @@ export interface EruvInspectionTask {
   cameraTarget: [number, number, number];
 }
 
+export interface ShulchanAruchCitation {
+  siman: number;
+  seif: string;
+  citation: string;
+  hebrewCitation: string;
+  rulingSummary: string;
+  mishnahBerurahRef?: string;
+}
+
 export interface DomainItem {
   id: string;
   name: string;
@@ -26,6 +35,7 @@ export interface DomainItem {
   carryingRule: string;
   color: string;
   examples: string[];
+  shulchanAruch?: ShulchanAruchCitation;
 }
 
 export interface QuizQuestion {
