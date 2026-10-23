@@ -5,12 +5,13 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { AppMode, EruvInspectionTask } from './types/eruv';
-import { INITIAL_INSPECTION_TASKS } from './data/eruvData';
+import { AppMode, EruvInspectionTask, GameDifficulty } from './types/eruv';
+import { INITIAL_INSPECTION_TASKS, DIFFICULTY_CONFIGS, getTasksForDifficulty } from './data/eruvData';
 import { TownScene } from './components/3d/TownScene';
 import { EruvGameCanvas } from './components/3d/EruvGameCanvas';
 import { CollapsibleDock } from './components/ui/CollapsibleDock';
 import { InspectorHUD } from './components/ui/InspectorHUD';
+import { DifficultyModal } from './components/ui/DifficultyModal';
 import { DomainCarryingSim } from './components/ui/DomainCarryingSim';
 import { SandboxControls } from './components/ui/SandboxControls';
 import { InfographicsSection } from './components/ui/InfographicsSection';
@@ -23,15 +24,31 @@ import { TutorialModal } from './components/ui/TutorialModal';
 import { KosherRulesModal } from './components/ui/KosherRulesModal';
 import { StudyHubModal } from './components/ui/StudyHubModal';
 import { MobileNavDrawer } from './components/ui/MobileNavDrawer';
+import { MobileAppHeader } from './components/ui/MobileAppHeader';
 import { AchievementsOverlay } from './components/ui/AchievementsOverlay';
 import { AchievementToast } from './components/ui/AchievementToast';
+import { DidYouKnowToast } from './components/ui/DidYouKnowToast';
 import { useAchievements } from './hooks/useAchievements';
+import { useTriviaToast } from './hooks/useTriviaToast';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { soundManager } from './utils/audio';
+import { hapticsManager } from './utils/haptics';
 
 export default function App() {
   const [currentMode, setCurrentMode] = useState<AppMode>('game');
-  const [tasks, setTasks] = useState<EruvInspectionTask[]>(INITIAL_INSPECTION_TASKS);
+  const [difficulty, setDifficulty] = useState<GameDifficulty>(() => {
+    try {
+      const stored = localStorage.getItem('eruv_game_difficulty') as GameDifficulty;
+      if (stored && ['easy', 'standard', 'expert'].includes(stored)) {
+        return stored;
+      }
+    } catch {
+      // Fallback
+    }
+    return 'standard';
+  });
+  const [isDifficultyModalOpen, setIsDifficultyModalOpen] = useState<boolean>(false);
+  const [tasks, setTasks] = useState<EruvInspectionTask[]>(() => getTasksForDifficulty(difficulty));
   const [selectedTask, setSelectedTask] = useState<EruvInspectionTask | null>(null);
   const [showVirtualWalls, setShowVirtualWalls] = useState<boolean>(true);
   const [isGlossaryOpen, setIsGlossaryOpen] = useState<boolean>(false);
@@ -46,7 +63,7 @@ export default function App() {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState<boolean>(false);
   const [soundActive, setSoundActive] = useState<boolean>(true);
   const [isSimulatedOffline, setIsSimulatedOffline] = useState<boolean>(false);
-  const [minutesToShabbat, setMinutesToShabbat] = useState<number>(48);
+  const [minutesToShabbat, setMinutesToShabbat] = useState<number>(() => DIFFICULTY_CONFIGS[difficulty].initialMinutes);
 
   const handleOpenGlossary = (term?: string) => {
     setGlossaryInitialQuery(term || '');
@@ -68,6 +85,16 @@ export default function App() {
     }
   };
 
+  const [hapticsActive, setHapticsActive] = useState<boolean>(() => hapticsManager.enabled);
+  const handleToggleHaptics = () => {
+    const nextState = !hapticsActive;
+    hapticsManager.enabled = nextState;
+    setHapticsActive(nextState);
+    if (nextState) {
+      hapticsManager.tap();
+    }
+  };
+
   const isOnline = useOnlineStatus(isSimulatedOffline);
   const sceneRef = useRef<TownScene | null>(null);
 
@@ -84,6 +111,20 @@ export default function App() {
     totalPoints,
     maxPoints,
   } = useAchievements();
+
+  // Halachic Trivia 'Did You Know?' Mini-Toast system in Game Mode
+  const {
+    currentFact: triviaFact,
+    isVisible: isTriviaVisible,
+    dismissFact: dismissTriviaFact,
+    nextFact: nextTriviaFact,
+  } = useTriviaToast({
+    isGameMode: currentMode === 'game',
+    isInspecting: selectedTask !== null,
+    onFactSeen: (totalSeen) => {
+      updateProgress('trivia-hunter', totalSeen);
+    },
+  });
 
   // First time visitor prompt: auto-show beginner tutorial
   useEffect(() => {
@@ -110,15 +151,19 @@ export default function App() {
   // Countdown timer for Friday afternoon atmosphere
   useEffect(() => {
     const timer = setInterval(() => {
-      setMinutesToShabbat(prev => (prev > 5 ? prev - 1 : 48));
+      setMinutesToShabbat(prev => (prev > 5 ? prev - 1 : DIFFICULTY_CONFIGS[difficulty].initialMinutes));
     }, 45000); // ticks every 45s
     return () => clearInterval(timer);
-  }, []);
+  }, [difficulty]);
 
   // Trigger celebration on reaching Kosher status
   useEffect(() => {
-    if (isKosher) {
+    if (isKosher && tasks.length > 0) {
+      hapticsManager.celebration();
       unlockAchievement('eruv-certified');
+      if (difficulty === 'expert') {
+        unlockAchievement('expert-posek');
+      }
       soundManager.playCelebration();
       try {
         confetti({
@@ -131,10 +176,11 @@ export default function App() {
         // Fallback
       }
     }
-  }, [isKosher, unlockAchievement]);
+  }, [isKosher, tasks.length, difficulty, unlockAchievement]);
 
   // Handle task repair
   const handleFixTask = (taskId: string) => {
+    hapticsManager.success();
     setTasks(prev =>
       prev.map(t => (t.id === taskId ? { ...t, fixed: true } : t))
     );
@@ -146,10 +192,14 @@ export default function App() {
     unlockAchievement('first-fix');
     const newFixedCount = tasks.filter(t => t.fixed || t.id === taskId).length;
     updateProgress('eruv-certified', newFixedCount);
+    if (difficulty === 'expert') {
+      updateProgress('expert-posek', newFixedCount);
+    }
   };
 
   // Jump camera to task
   const handleJumpToTask = (task: EruvInspectionTask) => {
+    hapticsManager.tap();
     setSelectedTask(task);
     if (sceneRef.current) {
       sceneRef.current.focusOnPosition(task.cameraPosition, task.cameraTarget);
@@ -159,6 +209,7 @@ export default function App() {
   // Click on a 3D pole
   const handlePoleClick = (poleIndex: number) => {
     soundManager.playClick();
+    hapticsManager.tap();
     const matchingTask = tasks.find(t => t.poleIndex === poleIndex);
     if (matchingTask) {
       handleJumpToTask(matchingTask);
@@ -168,6 +219,7 @@ export default function App() {
   // Click on synagogue
   const handleSynagogueClick = () => {
     soundManager.playClick();
+    hapticsManager.medium();
     const matzahTask = tasks.find(t => t.id === 'eruv-chatzerot');
     if (matzahTask) {
       handleJumpToTask(matzahTask);
@@ -196,10 +248,26 @@ export default function App() {
     }
   };
 
+  const handleSelectDifficulty = (newDiff: GameDifficulty) => {
+    setDifficulty(newDiff);
+    try {
+      localStorage.setItem('eruv_game_difficulty', newDiff);
+    } catch {
+      // Fallback
+    }
+    setTasks(getTasksForDifficulty(newDiff));
+    setSelectedTask(null);
+    setMinutesToShabbat(DIFFICULTY_CONFIGS[newDiff].initialMinutes);
+    if (sceneRef.current) {
+      sceneRef.current.resetOverviewCamera();
+    }
+  };
+
   const handleResetGame = () => {
     soundManager.playClick();
-    setTasks(INITIAL_INSPECTION_TASKS.map(t => ({ ...t, fixed: false })));
+    setTasks(getTasksForDifficulty(difficulty).map(t => ({ ...t, fixed: false })));
     setSelectedTask(null);
+    setMinutesToShabbat(DIFFICULTY_CONFIGS[difficulty].initialMinutes);
     if (sceneRef.current) {
       sceneRef.current.resetOverviewCamera();
     }
@@ -268,44 +336,35 @@ export default function App() {
           onOpenStudyHub={() => handleOpenStudyHub('daily')}
           onOpenMobileMenu={() => setIsMobileNavOpen(true)}
           onCameraPreset={handleCameraPreset}
+          onTriggerTrivia={nextTriviaFact}
+          difficulty={difficulty}
+          onOpenDifficulty={() => setIsDifficultyModalOpen(true)}
           unlockedBadgesCount={unlockedCount}
         />
       )}
 
-      {/* Mode 2: Halachic Architecture Sandbox */}
-      {currentMode === 'sandbox' && (
-        <div className="relative z-20 w-full h-full pt-4 pb-24 overflow-y-auto">
-          <SandboxControls
-            onKosherDoorwayBuilt={() => unlockAchievement('sandbox-architect')}
+      {/* Non-Game Views Container with Sticky Mobile App Header */}
+      {currentMode !== 'game' && (
+        <div className="relative z-20 w-full h-full flex flex-col overflow-hidden bg-slate-950/80 backdrop-blur-sm">
+          <MobileAppHeader
+            currentMode={currentMode}
+            onBackToGame={() => setCurrentMode('game')}
+            onOpenMobileMenu={() => setIsMobileNavOpen(true)}
+            soundActive={soundActive}
+            onToggleSound={handleToggleSound}
+            isKosher={isKosher}
           />
-        </div>
-      )}
-
-      {/* Mode 3: 4 Domains Carrying Simulator */}
-      {currentMode === 'domains' && (
-        <div className="relative z-20 w-full h-full pt-4 pb-24 overflow-y-auto">
-          <DomainCarryingSim />
-        </div>
-      )}
-
-      {/* Mode 4: Beginner's Illustrated Visual Infographics */}
-      {currentMode === 'infographics' && (
-        <div className="relative z-20 w-full h-full pt-4 pb-24 overflow-y-auto">
-          <InfographicsSection />
-        </div>
-      )}
-
-      {/* Mode 5: Halacha Master Quiz */}
-      {currentMode === 'quiz' && (
-        <div className="relative z-20 w-full h-full pt-4 pb-24 overflow-y-auto">
-          <QuizModal />
-        </div>
-      )}
-
-      {/* Mode 6: Daily Halacha Section */}
-      {currentMode === 'daily-halacha' && (
-        <div className="relative z-20 w-full h-full pt-4 pb-24 overflow-y-auto">
-          <DailyHalachaSection />
+          <div className="flex-1 overflow-y-auto overscroll-contain pb-28 pt-2 sm:pt-4 px-2 sm:px-4">
+            {currentMode === 'sandbox' && (
+              <SandboxControls
+                onKosherDoorwayBuilt={() => unlockAchievement('sandbox-architect')}
+              />
+            )}
+            {currentMode === 'domains' && <DomainCarryingSim />}
+            {currentMode === 'infographics' && <InfographicsSection />}
+            {currentMode === 'quiz' && <QuizModal />}
+            {currentMode === 'daily-halacha' && <DailyHalachaSection />}
+          </div>
         </div>
       )}
 
@@ -357,6 +416,10 @@ export default function App() {
         onToggleVirtualWalls={handleToggleVirtualWalls}
         soundActive={soundActive}
         onToggleSound={handleToggleSound}
+        hapticsActive={hapticsActive}
+        onToggleHaptics={handleToggleHaptics}
+        difficulty={difficulty}
+        onSelectDifficulty={handleSelectDifficulty}
         onCameraPreset={handleCameraPreset}
         onOpenTutorial={() => {
           setTutorialInitialStep(0);
@@ -368,8 +431,18 @@ export default function App() {
         onOpenKosherRules={() => setIsKosherRulesOpen(true)}
         onOpenOfflineModal={handleOpenOfflineModal}
         onResetGame={handleResetGame}
+        onTriggerTrivia={nextTriviaFact}
         unlockedBadgesCount={unlockedCount}
         isOnline={isOnline}
+      />
+
+      {/* Game Difficulty Level Modal */}
+      <DifficultyModal
+        isOpen={isDifficultyModalOpen}
+        onClose={() => setIsDifficultyModalOpen(false)}
+        currentDifficulty={difficulty}
+        onSelectDifficulty={handleSelectDifficulty}
+        fixedTasksCount={fixedCount}
       />
 
       {/* Interactive Beginner Tutorial Modal */}
@@ -422,6 +495,15 @@ export default function App() {
         achievement={recentlyUnlocked}
         onClose={dismissToast}
         onOpenOverlay={() => setIsAchievementsOpen(true)}
+      />
+
+      {/* 'Did You Know?' Halachic Trivia Mini-Toast in Game Mode */}
+      <DidYouKnowToast
+        fact={triviaFact}
+        isVisible={isTriviaVisible && currentMode === 'game' && !selectedTask}
+        onDismiss={dismissTriviaFact}
+        onNextFact={nextTriviaFact}
+        onOpenStudyHub={() => handleOpenStudyHub('facts')}
       />
     </div>
   );

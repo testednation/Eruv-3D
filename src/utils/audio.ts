@@ -1,3 +1,5 @@
+import { hapticsManager } from './haptics';
+
 /**
  * Procedural Web Audio API sound effects
  * Zero external audio files or network dependencies
@@ -22,6 +24,7 @@ class SoundManager {
   }
 
   playRepairSound() {
+    hapticsManager.success();
     const ctx = this.getContext();
     if (!ctx) return;
     const now = ctx.currentTime;
@@ -46,6 +49,7 @@ class SoundManager {
   }
 
   playWireTension() {
+    hapticsManager.medium();
     const ctx = this.getContext();
     if (!ctx) return;
     const now = ctx.currentTime;
@@ -67,6 +71,7 @@ class SoundManager {
   }
 
   playClick() {
+    hapticsManager.tap();
     const ctx = this.getContext();
     if (!ctx) return;
     const now = ctx.currentTime;
@@ -87,6 +92,7 @@ class SoundManager {
   }
 
   playCelebration() {
+    hapticsManager.celebration();
     const ctx = this.getContext();
     if (!ctx) return;
     const now = ctx.currentTime;
@@ -120,6 +126,7 @@ class SoundManager {
   }
 
   playError() {
+    hapticsManager.error();
     const ctx = this.getContext();
     if (!ctx) return;
     const now = ctx.currentTime;
@@ -137,6 +144,31 @@ class SoundManager {
     gain.connect(ctx.destination);
     osc.start(now);
     osc.stop(now + 0.25);
+  }
+
+  playTriviaChime() {
+    hapticsManager.light();
+    const ctx = this.getContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    // Gentle warm two-tone chime (F#5 -> C#6)
+    const tones = [739.99, 1108.73];
+    tones.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+
+      gain.gain.setValueAtTime(0, now + idx * 0.12);
+      gain.gain.linearRampToValueAtTime(0.06, now + idx * 0.12 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.45);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + idx * 0.12);
+      osc.stop(now + idx * 0.12 + 0.5);
+    });
   }
 }
 

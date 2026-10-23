@@ -48,8 +48,8 @@ export const InfographicsSection: React.FC = () => {
         </p>
       </div>
 
-      {/* Navigation Pills */}
-      <div className="flex flex-wrap items-center justify-center gap-1.5 mb-8 bg-slate-900/90 border border-slate-800 p-1.5 rounded-2xl max-w-3xl mx-auto">
+      {/* Navigation Pills (Horizontally scrollable on mobile, centered wrapped on desktop) */}
+      <div className="flex items-center gap-1.5 mb-6 sm:mb-8 bg-slate-900/90 border border-slate-800 p-1.5 rounded-2xl max-w-4xl mx-auto overflow-x-auto no-scrollbar flex-nowrap sm:flex-wrap sm:justify-center">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -60,13 +60,13 @@ export const InfographicsSection: React.FC = () => {
                 soundManager.playClick();
                 setActiveTab(tab.id as typeof activeTab);
               }}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
                 isActive
                   ? 'bg-emerald-500 text-slate-950 shadow-md font-bold'
                   : 'text-slate-300 hover:text-white hover:bg-slate-800'
               }`}
             >
-              <Icon className="w-3.5 h-3.5" />
+              <Icon className="w-3.5 h-3.5 shrink-0" />
               <span>{tab.label}</span>
             </button>
           );

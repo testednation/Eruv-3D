@@ -304,9 +304,18 @@ export const DomainCarryingSim: React.FC = () => {
           {ruling.explanation}
         </p>
 
-        <div className="p-3 bg-slate-800/60 rounded-xl border border-slate-700/60 flex items-center justify-between text-xs text-slate-400">
-          <span>Halachic Foundation:</span>
-          <span className="font-mono text-sky-300">{ruling.source}</span>
+        <div className="p-3 bg-slate-800/60 rounded-xl border border-slate-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-400">
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-slate-300">Halachic Foundation:</span>
+            <span className="font-mono text-sky-300">{ruling.source}</span>
+          </div>
+          {fromDomain.shulchanAruch && (
+            <div className="flex items-center gap-1 self-start sm:self-auto">
+              <span className="text-[11px] font-mono text-amber-300 bg-amber-950/50 px-2 py-0.5 rounded border border-amber-800/50">
+                {fromDomain.shulchanAruch.hebrewCitation} ({fromDomain.shulchanAruch.citation})
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>

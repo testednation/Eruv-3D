@@ -85,8 +85,8 @@ export const SandboxControls: React.FC<SandboxControlsProps> = ({ onKosherDoorwa
 
           <div className="flex items-center gap-2">
             <div className="text-right">
-              <div className="text-[10px] uppercase font-bold text-slate-400">Talmudic Standard</div>
-              <div className="text-xs font-mono text-amber-300">Talmud Eruvin 11b</div>
+              <div className="text-[10px] uppercase font-bold text-slate-400">Shulchan Aruch Codex</div>
+              <div className="text-xs font-mono text-amber-300">OC §362:10–11; §366:1</div>
             </div>
           </div>
         </div>

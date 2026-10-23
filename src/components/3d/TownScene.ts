@@ -747,10 +747,13 @@ export class TownScene {
     this.scene.remove(this.brokenWireGroup);
     this.brokenWireGroup = new THREE.Group();
 
-    const isBrokenFixed = fixedTasks['broken-wire'];
-    const isSideFixed = fixedTasks['side-attachment'];
-    const isGapFixed = fixedTasks['large-gap'];
-    const isLeaningFixed = fixedTasks['leaning-pole'];
+    const isBrokenFixed = fixedTasks['broken-wire'] !== false;
+    const isSideFixed = fixedTasks['side-attachment'] !== false;
+    const isGapFixed = fixedTasks['large-gap'] !== false;
+    const isLeaningFixed = fixedTasks['leaning-pole'] !== false;
+    const isSlackFixed = fixedTasks['slack-wire'] !== false;
+    const isLavudFixed = fixedTasks['lavud-gap'] !== false;
+    const isLeaseFixed = fixedTasks['sechirat-reshut'] !== false;
 
     // Update pole 6 rotation if fixed
     if (this.poles[6]) {
@@ -817,17 +820,24 @@ export class TownScene {
         continue;
       }
 
-      // Handle Task 4: Large gap between Pole 7 and Pole 0
+      // Handle Segment Halachic Validity
       let isSegmentKosher = true;
       if (i === 7 && !isGapFixed) {
         isSegmentKosher = false;
       }
-
       if ((i === 4 || nextIdx === 4) && !isSideFixed) {
         isSegmentKosher = false;
       }
-
       if ((i === 6 || nextIdx === 6) && !isLeaningFixed) {
+        isSegmentKosher = false;
+      }
+      if ((i === 5 || nextIdx === 5) && !isSlackFixed) {
+        isSegmentKosher = false;
+      }
+      if ((i === 1 || nextIdx === 1) && !isLavudFixed) {
+        isSegmentKosher = false;
+      }
+      if ((i === 7 || nextIdx === 7) && !isLeaseFixed) {
         isSegmentKosher = false;
       }
 
@@ -837,8 +847,14 @@ export class TownScene {
       for (let s = 0; s <= segments; s++) {
         const t = s / segments;
         const pt = new THREE.Vector3().lerpVectors(posA, posB, t);
-        // Sag curve
-        const sag = Math.sin(t * Math.PI) * 0.18;
+        
+        let sag = Math.sin(t * Math.PI) * 0.18;
+        // Thermal sag & wind sway between Pole 5 and Pole 6 if unfixed
+        if (i === 5 && !isSlackFixed) {
+          sag = Math.sin(t * Math.PI) * 0.82;
+          pt.x += Math.sin(t * Math.PI) * 0.65;
+        }
+
         pt.y -= sag;
         points.push(pt);
       }
@@ -975,7 +991,19 @@ export class TownScene {
     this.poles.forEach((p, idx) => {
       const marker = p.getObjectByName(`marker_${idx}`) as THREE.Mesh;
       if (marker && marker.material instanceof THREE.MeshStandardMaterial) {
-        if (isKosher) {
+        const isPoleBroken = Object.entries(fixedTasks).some(([taskId, isFixed]) => {
+          if (isFixed) return false;
+          if (taskId === 'broken-wire' && idx === 2) return true;
+          if (taskId === 'side-attachment' && idx === 4) return true;
+          if (taskId === 'leaning-pole' && idx === 6) return true;
+          if (taskId === 'large-gap' && idx === 0) return true;
+          if (taskId === 'lavud-gap' && idx === 1) return true;
+          if (taskId === 'slack-wire' && idx === 5) return true;
+          if (taskId === 'sechirat-reshut' && idx === 7) return true;
+          return false;
+        });
+
+        if (isKosher || !isPoleBroken) {
           marker.material.color.setHex(0x10b981);
           marker.material.emissive.setHex(0x10b981);
         } else {

@@ -222,8 +222,8 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 shadow-2xl max-w-xl w-full max-h-[88vh] flex flex-col text-slate-100 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+      <div className="bg-slate-900 border border-slate-700 rounded-3xl p-4 sm:p-6 shadow-2xl max-w-xl w-full max-h-[88vh] flex flex-col text-slate-100 overflow-hidden">
         {/* Header Bar */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
           <div className="flex items-center gap-2">
@@ -232,7 +232,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-800">
                 {current.badge} • Step {currentStep + 1} of {steps.length}
               </span>
-              <h3 className="text-lg font-serif font-bold text-white mt-1">
+              <h3 className="text-base sm:text-lg font-serif font-bold text-white mt-1">
                 {current.title}
               </h3>
             </div>
@@ -261,7 +261,7 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({
         </div>
 
         {/* Step Progress Dots & Navigation Footer */}
-        <div className="flex items-center justify-between border-t border-slate-800 pt-3">
+        <div className="flex flex-wrap items-center justify-between border-t border-slate-800 pt-3 gap-2">
           <button
             onClick={onClose}
             className="text-xs text-slate-400 hover:text-white transition-colors cursor-pointer"

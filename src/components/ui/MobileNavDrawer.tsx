@@ -16,8 +16,11 @@ import {
   AlertTriangle,
   Clock,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  Lightbulb,
+  Smartphone
 } from 'lucide-react';
+import { GameDifficulty } from '../../types/eruv';
 import { soundManager } from '../../utils/audio';
 
 interface MobileNavDrawerProps {
@@ -31,6 +34,10 @@ interface MobileNavDrawerProps {
   onToggleVirtualWalls: () => void;
   soundActive: boolean;
   onToggleSound: () => void;
+  hapticsActive?: boolean;
+  onToggleHaptics?: () => void;
+  difficulty?: GameDifficulty;
+  onSelectDifficulty?: (difficulty: GameDifficulty) => void;
   onCameraPreset: (preset: 'overview' | 'synagogue' | 'tasks' | 'perimeter') => void;
   onOpenTutorial: () => void;
   onOpenAchievements: () => void;
@@ -39,6 +46,7 @@ interface MobileNavDrawerProps {
   onOpenKosherRules: () => void;
   onOpenOfflineModal: () => void;
   onResetGame: () => void;
+  onTriggerTrivia?: () => void;
   unlockedBadgesCount: number;
   isOnline: boolean;
 }
@@ -54,6 +62,10 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
   onToggleVirtualWalls,
   soundActive,
   onToggleSound,
+  hapticsActive = true,
+  onToggleHaptics,
+  difficulty = 'standard',
+  onSelectDifficulty,
   onCameraPreset,
   onOpenTutorial,
   onOpenAchievements,
@@ -62,6 +74,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
   onOpenKosherRules,
   onOpenOfflineModal,
   onResetGame,
+  onTriggerTrivia,
   unlockedBadgesCount,
   isOnline,
 }) => {
@@ -127,6 +140,40 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
               style={{ width: `${(fixedCount / totalTasks) * 100}%` }}
             />
           </div>
+
+          {/* Difficulty Challenge Selector */}
+          {onSelectDifficulty && (
+            <div className="pt-2 border-t border-slate-800/80">
+              <div className="flex items-center justify-between text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1.5">
+                <span>Challenge Level</span>
+                <span className="text-amber-400 lowercase font-mono">
+                  {difficulty === 'easy' ? '3 tasks' : difficulty === 'standard' ? '5 tasks' : '8 tasks'}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                {(['easy', 'standard', 'expert'] as GameDifficulty[]).map((d) => (
+                  <button
+                    key={d}
+                    onClick={() => {
+                      soundManager.playClick();
+                      onSelectDifficulty(d);
+                    }}
+                    className={`py-1.5 px-1 rounded-lg text-[10px] font-bold uppercase transition-all capitalize cursor-pointer ${
+                      difficulty === d
+                        ? d === 'easy'
+                          ? 'bg-emerald-500 text-slate-950 font-extrabold shadow'
+                          : d === 'standard'
+                          ? 'bg-amber-500 text-slate-950 font-extrabold shadow'
+                          : 'bg-purple-500 text-white font-extrabold shadow'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {d}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Navigation Action Links */}
@@ -196,6 +243,23 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
               {unlockedBadgesCount}/10
             </span>
           </button>
+
+          {onTriggerTrivia && (
+            <button
+              onClick={() => {
+                soundManager.playClick();
+                onClose();
+                onTriggerTrivia();
+              }}
+              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-slate-800/40 hover:bg-slate-800 text-xs font-semibold text-yellow-300 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5">
+                <Lightbulb className="w-4 h-4 text-amber-400" />
+                <span>Did You Know? Trivia</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-500" />
+            </button>
+          )}
 
           <button
             onClick={() => {
@@ -269,6 +333,22 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
             </div>
             <span className="text-[11px] font-mono text-slate-400">{soundActive ? 'ON' : 'OFF'}</span>
           </button>
+
+          {/* Haptic Vibration Feedback Toggle */}
+          {onToggleHaptics && (
+            <button
+              onClick={() => {
+                onToggleHaptics();
+              }}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-800/40 hover:bg-slate-800 text-xs text-slate-300 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <Smartphone className={`w-4 h-4 ${hapticsActive ? 'text-amber-400' : 'text-slate-500'}`} />
+                <span>Haptic Vibration</span>
+              </div>
+              <span className="text-[11px] font-mono text-slate-400">{hapticsActive ? 'ON' : 'OFF'}</span>
+            </button>
+          )}
 
           {/* Virtual Walls Toggle */}
           <button

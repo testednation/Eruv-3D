@@ -15,6 +15,7 @@ import { DailyHalachaCard } from './DailyHalachaCard';
 import { DidYouKnowCard } from './DidYouKnowCard';
 import { KosherVisualizer } from './KosherVisualizer';
 import { ShulchanAruchSourcesView } from './ShulchanAruchSourcesView';
+import { StudyStreakTracker } from './StudyStreakTracker';
 import { soundManager } from '../../utils/audio';
 
 interface StudyHubModalProps {
@@ -73,6 +74,13 @@ export const StudyHubModal: React.FC<StudyHubModalProps> = ({
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Daily Study Streak Tracker Bar (Visible on other tabs for quick check-in) */}
+        {activeTab !== 'daily' && (
+          <div className="px-4 sm:px-5 pt-3 pb-1 bg-slate-900/90 border-b border-slate-800/60">
+            <StudyStreakTracker variant="compact" />
+          </div>
+        )}
 
         {/* Tab Switcher */}
         <div className="px-4 sm:px-5 pt-3 pb-2 border-b border-slate-800 bg-slate-950/40">
@@ -143,6 +151,9 @@ export const StudyHubModal: React.FC<StudyHubModalProps> = ({
         <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4">
           {activeTab === 'daily' && (
             <div className="space-y-4">
+              {/* Daily Engagement Streak Tracker Hero */}
+              <StudyStreakTracker variant="hero" />
+
               <div className="p-3 bg-amber-950/20 border border-amber-500/30 rounded-2xl flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-amber-400" />

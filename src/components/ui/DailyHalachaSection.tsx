@@ -15,6 +15,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { soundManager } from '../../utils/audio';
+import { StudyStreakTracker } from './StudyStreakTracker';
 
 interface DailyHalachaData {
   title: string;
@@ -130,6 +131,11 @@ export const DailyHalachaSection: React.FC = () => {
         <p className="text-xs sm:text-sm text-slate-400 mt-1 font-mono">
           {todayFormatted} • Daily laws distilled for beginners & practitioners
         </p>
+      </div>
+
+      {/* Daily Engagement Streak Tracker */}
+      <div className="mb-6">
+        <StudyStreakTracker variant="hero" />
       </div>
 
       {/* Topic Filter Pills */}

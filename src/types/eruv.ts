@@ -1,5 +1,21 @@
 export type AppMode = 'game' | 'sandbox' | 'domains' | 'infographics' | 'quiz' | 'daily-halacha';
 
+export type GameDifficulty = 'easy' | 'standard' | 'expert';
+
+export interface DifficultyConfig {
+  id: GameDifficulty;
+  name: string;
+  hebrewName: string;
+  badge: string;
+  description: string;
+  taskCount: number;
+  initialMinutes: number;
+  color: string;
+  accentClass: string;
+  bgClass: string;
+  borderClass: string;
+}
+
 export interface EruvInspectionTask {
   id: string;
   title: string;
@@ -14,6 +30,7 @@ export interface EruvInspectionTask {
   fixActionLabel: string;
   cameraPosition: [number, number, number];
   cameraTarget: [number, number, number];
+  sourceCitation?: ShulchanAruchCitation;
 }
 
 export interface ShulchanAruchCitation {

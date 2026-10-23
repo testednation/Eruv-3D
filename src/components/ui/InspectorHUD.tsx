@@ -20,10 +20,12 @@ import {
   Compass,
   X,
   ScrollText,
-  Lightbulb
+  Lightbulb,
+  Zap
 } from 'lucide-react';
-import { EruvInspectionTask } from '../../types/eruv';
+import { EruvInspectionTask, GameDifficulty } from '../../types/eruv';
 import { soundManager } from '../../utils/audio';
+import { hapticsManager } from '../../utils/haptics';
 import { KosherVisualizer } from './KosherVisualizer';
 
 interface InspectorHUDProps {
@@ -42,6 +44,9 @@ interface InspectorHUDProps {
   onOpenStudyHub?: () => void;
   onOpenMobileMenu?: () => void;
   onCameraPreset?: (preset: 'overview' | 'synagogue' | 'tasks' | 'perimeter') => void;
+  onTriggerTrivia?: () => void;
+  difficulty?: GameDifficulty;
+  onOpenDifficulty?: () => void;
   unlockedBadgesCount?: number;
 }
 
@@ -61,6 +66,9 @@ export const InspectorHUD: React.FC<InspectorHUDProps> = ({
   onOpenStudyHub,
   onOpenMobileMenu,
   onCameraPreset,
+  onTriggerTrivia,
+  difficulty = 'standard',
+  onOpenDifficulty,
   unlockedBadgesCount = 0,
 }) => {
   const [activeTaskIndex, setActiveTaskIndex] = useState(0);
@@ -82,6 +90,7 @@ export const InspectorHUD: React.FC<InspectorHUDProps> = ({
 
   const handleNextBreachJump = () => {
     soundManager.playClick();
+    hapticsManager.medium();
     if (nextUnfixedTask) {
       onJumpToTask(nextUnfixedTask);
       const idx = tasks.findIndex(t => t.id === nextUnfixedTask.id);
@@ -93,6 +102,7 @@ export const InspectorHUD: React.FC<InspectorHUDProps> = ({
 
   const handleStepTask = (direction: 'next' | 'prev') => {
     soundManager.playClick();
+    hapticsManager.tap();
     let newIndex = direction === 'next' ? activeTaskIndex + 1 : activeTaskIndex - 1;
     if (newIndex >= tasks.length) newIndex = 0;
     if (newIndex < 0) newIndex = tasks.length - 1;
@@ -134,13 +144,35 @@ export const InspectorHUD: React.FC<InspectorHUDProps> = ({
               </button>
             </div>
 
-            <div className="flex items-center gap-2 text-[10px] sm:text-xs text-slate-300">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-slate-300">
               <span className="font-mono text-amber-300 font-semibold flex items-center gap-1">
                 <Clock className="w-3 h-3 text-amber-400 inline" />
-                {minutesToShabbat}m to Sunset
+                {minutesToShabbat}m
               </span>
-              <span className="text-slate-500 hidden sm:inline">·</span>
-              <span className="text-slate-400 hidden sm:inline font-mono">{fixedCount}/{tasks.length} Fixed</span>
+              <span className="text-slate-500">·</span>
+              <span className="text-slate-400 font-mono">{fixedCount}/{tasks.length}</span>
+              {onOpenDifficulty && (
+                <>
+                  <span className="text-slate-500">·</span>
+                  <button
+                    onClick={() => {
+                      soundManager.playClick();
+                      onOpenDifficulty();
+                    }}
+                    className={`font-mono uppercase font-bold text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-md border transition-all cursor-pointer flex items-center gap-1 ${
+                      difficulty === 'easy'
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'
+                        : difficulty === 'standard'
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30'
+                        : 'bg-purple-500/20 text-purple-300 border-purple-500/40 hover:bg-purple-500/30'
+                    }`}
+                    title="Change Difficulty Challenge Level (Easy, Standard, Expert)"
+                  >
+                    <Zap className="w-2.5 h-2.5" />
+                    <span>{difficulty}</span>
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -149,6 +181,25 @@ export const InspectorHUD: React.FC<InspectorHUDProps> = ({
         <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2">
           {/* Desktop Navigation Action Buttons */}
           <div className="hidden md:flex items-center gap-1.5 bg-slate-900/90 border border-slate-700/80 rounded-2xl p-1.5 shadow-xl backdrop-blur-md">
+            {onOpenDifficulty && (
+              <button
+                onClick={() => {
+                  soundManager.playClick();
+                  onOpenDifficulty();
+                }}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-colors cursor-pointer capitalize ${
+                  difficulty === 'easy'
+                    ? 'bg-emerald-500/15 hover:bg-emerald-500/25 border-emerald-500/30 text-emerald-300'
+                    : difficulty === 'standard'
+                    ? 'bg-amber-500/15 hover:bg-amber-500/25 border-amber-500/30 text-amber-300'
+                    : 'bg-purple-500/15 hover:bg-purple-500/25 border-purple-500/30 text-purple-300'
+                }`}
+                title="Change Game Challenge Level"
+              >
+                <Zap className="w-3.5 h-3.5" />
+                <span>{difficulty}</span>
+              </button>
+            )}
             {onOpenStudyHub && (
               <button
                 onClick={() => {
@@ -188,6 +239,20 @@ export const InspectorHUD: React.FC<InspectorHUDProps> = ({
               >
                 <Search className="w-3.5 h-3.5" />
                 <span>Glossary</span>
+              </button>
+            )}
+
+            {onTriggerTrivia && (
+              <button
+                onClick={() => {
+                  soundManager.playClick();
+                  onTriggerTrivia();
+                }}
+                className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-xs text-amber-300 font-semibold transition-colors cursor-pointer"
+                title="Halachic Trivia & Eruv Fun Facts (Did You Know?)"
+              >
+                <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
+                <span>Trivia</span>
               </button>
             )}
 
@@ -261,16 +326,17 @@ export const InspectorHUD: React.FC<InspectorHUDProps> = ({
         </div>
       )}
 
-      {/* Floating Scavenger Controls (Bottom-left stepper + Bottom-right Next Breach FAB) */}
-      <div className="absolute bottom-20 sm:bottom-24 left-3 right-3 sm:left-6 sm:right-6 z-20 pointer-events-none flex items-end justify-between gap-3">
+      {/* Floating Scavenger Controls (Bottom stepper + Next Breach FAB) */}
+      <div className="absolute bottom-16 sm:bottom-24 left-2 right-2 sm:left-6 sm:right-6 z-20 pointer-events-none flex flex-col-reverse sm:flex-row sm:items-end justify-between gap-2 sm:gap-3">
         {/* Left: Interactive Inspection Stepper */}
-        <div className="pointer-events-auto bg-slate-900/95 border border-slate-700/80 rounded-2xl p-2 sm:p-2.5 shadow-2xl backdrop-blur-md max-w-sm flex items-center gap-2">
+        <div className="pointer-events-auto bg-slate-900/95 border border-slate-700/80 rounded-2xl p-2 sm:p-2.5 shadow-2xl backdrop-blur-md max-w-sm w-full sm:w-auto flex items-center gap-2">
           <button
             onClick={() => handleStepTask('prev')}
-            className="p-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer shrink-0"
+            className="p-2 sm:p-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer shrink-0"
+            style={{ minWidth: '40px', minHeight: '40px' }}
             aria-label="Previous inspection point"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-4 h-4 mx-auto" />
           </button>
 
           <button
@@ -294,9 +360,9 @@ export const InspectorHUD: React.FC<InspectorHUDProps> = ({
             </div>
             <div className="text-xs font-semibold text-white truncate mt-0.5 flex items-center gap-1">
               {currentStepTask.fixed ? (
-                <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               ) : (
-                <AlertCircle className="w-3 h-3 text-amber-400 shrink-0" />
+                <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
               )}
               <span className="truncate">{currentStepTask.title}</span>
             </div>
@@ -304,19 +370,20 @@ export const InspectorHUD: React.FC<InspectorHUDProps> = ({
 
           <button
             onClick={() => handleStepTask('next')}
-            className="p-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer shrink-0"
+            className="p-2 sm:p-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer shrink-0"
+            style={{ minWidth: '40px', minHeight: '40px' }}
             aria-label="Next inspection point"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-4 h-4 mx-auto" />
           </button>
         </div>
 
-        {/* Right: High-Priority "Next Issue" Thumb Action Button (FAB) */}
+        {/* Right / Top on mobile: High-Priority "Next Issue" Thumb Action Button (FAB) */}
         {!isKosher && nextUnfixedTask && (
           <button
             onClick={handleNextBreachJump}
-            className="pointer-events-auto flex items-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-bold text-xs sm:text-sm shadow-xl hover:shadow-amber-500/30 transition-all cursor-pointer animate-pulse-subtle shrink-0"
-            style={{ minHeight: '48px' }}
+            className="pointer-events-auto self-end sm:self-auto flex items-center gap-2 px-3.5 py-2 sm:px-5 sm:py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-bold text-xs sm:text-sm shadow-xl hover:shadow-amber-500/30 transition-all cursor-pointer animate-pulse-subtle shrink-0"
+            style={{ minHeight: '44px' }}
           >
             <Wrench className="w-4 h-4 text-slate-950 shrink-0" />
             <span className="whitespace-nowrap">Next Breach ({remainingCount} left)</span>
@@ -332,67 +399,71 @@ export const InspectorHUD: React.FC<InspectorHUDProps> = ({
         >
           {/* Card / Bottom-Sheet Container */}
           <div 
-            className="bg-slate-900 border border-slate-700 rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 shadow-2xl max-w-lg w-full text-slate-100 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto"
+            className="bg-slate-900 border border-slate-700 rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-lg w-full text-slate-100 max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Mobile Sheet Drag Handle Pill */}
-            <div className="sm:hidden flex justify-center -mt-2 mb-3">
-              <div className="w-12 h-1 bg-slate-700 rounded-full" />
-            </div>
+            {/* Modal Header & Drag Handle (Fixed) */}
+            <div className="p-4 sm:p-6 pb-3 border-b border-slate-800 shrink-0">
+              {/* Mobile Sheet Drag Handle Pill */}
+              <div className="sm:hidden flex justify-center -mt-1 mb-2">
+                <div className="w-12 h-1 bg-slate-700 rounded-full" />
+              </div>
 
-            {/* Modal Header */}
-            <div className="flex items-start justify-between gap-3 border-b border-slate-800 pb-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
-                    selectedTask.fixed ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
-                  }`}>
-                    {selectedTask.fixed ? 'Repaired & Kosher' : 'Breach Detected'}
-                  </span>
-                  <span className="text-xs text-slate-400">{selectedTask.locationName}</span>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                      selectedTask.fixed ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
+                    }`}>
+                      {selectedTask.fixed ? 'Repaired & Kosher' : 'Breach Detected'}
+                    </span>
+                    <span className="text-xs text-slate-400">{selectedTask.locationName}</span>
+                  </div>
+                  <h2 className="text-lg sm:text-xl font-serif font-bold text-white mt-1">
+                    {selectedTask.title}
+                  </h2>
                 </div>
-                <h2 className="text-lg sm:text-xl font-serif font-bold text-white mt-1">
-                  {selectedTask.title}
-                </h2>
+                <button
+                  onClick={() => onSelectTask(null)}
+                  className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
+                  aria-label="Close Inspection Card"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <button
-                onClick={() => onSelectTask(null)}
-                className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
-                aria-label="Close Inspection Card"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            {/* Hebrew Halachic Title */}
-            <div className="my-3 px-3 py-2 bg-slate-800/60 rounded-xl border border-slate-700/60 flex items-center justify-between">
-              <span className="text-xs text-slate-400">Halachic Category:</span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-amber-300 font-serif" dir="rtl">
-                  {selectedTask.hebrewTerm}
-                </span>
-                {onOpenGlossary && (
-                  <button
-                    onClick={() => {
-                      soundManager.playClick();
-                      const termQuery = selectedTask.id === 'broken-wire' ? 'Pirtzah' :
-                        selectedTask.id === 'side-attachment' ? 'Tzurat HaPetach' :
-                        selectedTask.id === 'leaning-pole' ? 'Lechi' :
-                        selectedTask.id === 'large-gap' ? 'Tzurat HaPetach' :
-                        selectedTask.id === 'eruv-chatzerot' ? 'Eruv Chatzerot' : 'Tzurat HaPetach';
-                      onOpenGlossary(termQuery);
-                    }}
-                    className="p-1 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 text-xs transition-colors flex items-center gap-1 cursor-pointer"
-                    title="Search this term in the Glossary"
-                  >
-                    <Search className="w-3 h-3" />
-                  </button>
-                )}
+              {/* Hebrew Halachic Title & Quick Glossary Search */}
+              <div className="mt-2.5 px-3 py-1.5 bg-slate-800/60 rounded-xl border border-slate-700/60 flex items-center justify-between">
+                <span className="text-xs text-slate-400">Halachic Category:</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-amber-300 font-serif" dir="rtl">
+                    {selectedTask.hebrewTerm}
+                  </span>
+                  {onOpenGlossary && (
+                    <button
+                      onClick={() => {
+                        soundManager.playClick();
+                        const termQuery = selectedTask.id === 'broken-wire' ? 'Pirtzah' :
+                          selectedTask.id === 'side-attachment' ? 'Tzurat HaPetach' :
+                          selectedTask.id === 'leaning-pole' ? 'Lechi' :
+                          selectedTask.id === 'large-gap' ? 'Tzurat HaPetach' :
+                          selectedTask.id === 'eruv-chatzerot' ? 'Eruv Chatzerot' : 'Tzurat HaPetach';
+                        onOpenGlossary(termQuery);
+                      }}
+                      className="p-1 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 text-xs transition-colors flex items-center gap-1 cursor-pointer"
+                      title="Search this term in the Glossary"
+                    >
+                      <Search className="w-3 h-3" />
+                      <span className="text-[10px]">Glossary</span>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Real-Time Pictorial Kosher vs. Pasul Visualizer */}
-            <div className="my-3">
+            {/* Scrollable Educational Body */}
+            <div className="p-4 sm:p-6 py-3 overflow-y-auto flex-1 space-y-3">
+              {/* Real-Time Pictorial Kosher vs. Pasul Visualizer */}
               <KosherVisualizer
                 currentRule={
                   selectedTask.id === 'broken-wire' ? 'broken' :
@@ -402,33 +473,33 @@ export const InspectorHUD: React.FC<InspectorHUDProps> = ({
                 }
                 isCompact={true}
               />
-            </div>
 
-            {/* Description & Scenario */}
-            <div className="space-y-2.5 text-xs sm:text-sm text-slate-300 leading-relaxed">
-              <p>{selectedTask.description}</p>
+              {/* Description & Scenario */}
+              <div className="space-y-2 text-xs sm:text-sm text-slate-300 leading-relaxed">
+                <p>{selectedTask.description}</p>
 
-              <div className="p-3 bg-amber-950/30 border border-amber-600/30 rounded-xl">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400 mb-1">
-                  <Info className="w-3.5 h-3.5" />
-                  <span>Beginner Halacha Note:</span>
+                <div className="p-3 bg-amber-950/30 border border-amber-600/30 rounded-xl">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400 mb-1">
+                    <Info className="w-3.5 h-3.5" />
+                    <span>Beginner Halacha Note:</span>
+                  </div>
+                  <p className="text-xs text-amber-200/90 leading-relaxed">
+                    {selectedTask.halachicIssue}
+                  </p>
                 </div>
-                <p className="text-xs text-amber-200/90 leading-relaxed">
-                  {selectedTask.halachicIssue}
-                </p>
-              </div>
 
-              <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-mono">
-                <BookMarked className="w-3.5 h-3.5 text-sky-400" />
-                <span>Source: {selectedTask.source}</span>
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-mono">
+                  <BookMarked className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                  <span>Source: {selectedTask.source}</span>
+                </div>
               </div>
             </div>
 
-            {/* Action Buttons (Full width on mobile, tactile 48px+ target) */}
-            <div className="mt-5 flex items-center justify-between gap-3 pt-3 border-t border-slate-800">
+            {/* Sticky Action Footer (Tactile 48px+ button, always accessible without scrolling) */}
+            <div className="p-4 sm:p-5 pt-3 bg-slate-900/98 border-t border-slate-800 shrink-0 flex items-center justify-between gap-3 safe-area-inset-bottom">
               <button
                 onClick={() => onSelectTask(null)}
-                className="px-4 py-2.5 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+                className="px-3.5 py-2.5 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors cursor-pointer shrink-0"
               >
                 Close View
               </button>
@@ -436,18 +507,22 @@ export const InspectorHUD: React.FC<InspectorHUDProps> = ({
               {!selectedTask.fixed ? (
                 <button
                   onClick={() => {
+                    hapticsManager.medium();
                     soundManager.playWireTension();
-                    setTimeout(() => soundManager.playRepairSound(), 200);
+                    setTimeout(() => {
+                      soundManager.playRepairSound();
+                      hapticsManager.success();
+                    }, 200);
                     onFixTask(selectedTask.id);
                   }}
-                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-bold rounded-xl shadow-lg hover:shadow-amber-500/25 transition-all cursor-pointer"
+                  className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-bold rounded-xl shadow-lg hover:shadow-amber-500/25 transition-all cursor-pointer active:scale-95"
                   style={{ minHeight: '48px' }}
                 >
                   <Wrench className="w-4 h-4" />
                   <span>{selectedTask.fixActionLabel}</span>
                 </button>
               ) : (
-                <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 px-4 py-2.5 bg-emerald-950/40 border border-emerald-500/30 rounded-xl">
+                <div className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-400 px-4 py-3 bg-emerald-950/40 border border-emerald-500/30 rounded-xl">
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Kosher & Verified</span>
                 </div>

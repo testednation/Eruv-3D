@@ -1,6 +1,48 @@
-import { DomainItem, EruvInspectionTask, QuizQuestion, ShulchanAruchCitation } from '../types/eruv';
+import { DomainItem, EruvInspectionTask, GameDifficulty, DifficultyConfig, QuizQuestion, ShulchanAruchCitation } from '../types/eruv';
 
-export const INITIAL_INSPECTION_TASKS: EruvInspectionTask[] = [
+export const DIFFICULTY_CONFIGS: Record<GameDifficulty, DifficultyConfig> = {
+  easy: {
+    id: 'easy',
+    name: 'Easy: Apprentice',
+    hebrewName: 'שׁוֹמֵר קַל (Shomer Kal)',
+    badge: '3 Breaches · 60m Sunset',
+    description: 'Perfect for beginners. Focuses on the core essentials: continuous cable loop, overhead wire alignment, and communal matzah dedication.',
+    taskCount: 3,
+    initialMinutes: 60,
+    color: '#10b981',
+    accentClass: 'text-emerald-400',
+    bgClass: 'bg-emerald-500/15',
+    borderClass: 'border-emerald-500/40',
+  },
+  standard: {
+    id: 'standard',
+    name: 'Standard: Certified',
+    hebrewName: 'מוּמְחֶה (Mumcheh)',
+    badge: '5 Breaches · 45m Sunset',
+    description: 'The canonical inspection audit. Covers severe Lechi leans, alleyway gap thresholds, and doorway framing.',
+    taskCount: 5,
+    initialMinutes: 45,
+    color: '#f59e0b',
+    accentClass: 'text-amber-400',
+    bgClass: 'bg-amber-500/15',
+    borderClass: 'border-amber-500/40',
+  },
+  expert: {
+    id: 'expert',
+    name: 'Expert: Rabbinic Poshek',
+    hebrewName: 'דַּיָּן וּפוֹסֵק (Dayan U\'Posek)',
+    badge: '8 Breaches · 25m Sunset',
+    description: 'High-challenge rabbinic audit with rapid Friday sunset countdown. Resolves sub-3-tefachim Lavud erosion, thermal cable sag, and municipal lease deeds.',
+    taskCount: 8,
+    initialMinutes: 25,
+    color: '#a855f7',
+    accentClass: 'text-purple-400',
+    bgClass: 'bg-purple-500/15',
+    borderClass: 'border-purple-500/40',
+  },
+};
+
+export const ALL_INSPECTION_TASKS: EruvInspectionTask[] = [
   {
     id: 'broken-wire',
     title: 'Snapped Perimeter Cable',
@@ -15,6 +57,14 @@ export const INITIAL_INSPECTION_TASKS: EruvInspectionTask[] = [
     fixActionLabel: 'Splice & Tension Cable',
     cameraPosition: [0, 8, 14],
     cameraTarget: [0, 4, 8],
+    sourceCitation: {
+      siman: 362,
+      seif: '10',
+      citation: 'Shulchan Aruch, Orach Chayim §362:10',
+      hebrewCitation: 'שו״ע או״ח סימן שס״ב סעיף י׳',
+      rulingSummary: 'A Tzurat HaPetach requires an unbroken crossbeam or wire above the posts. If the wire snaps or falls, the partition is breached.',
+      mishnahBerurahRef: 'Mishnah Berurah §362 s.k. 46–48; §365 s.k. 1–3',
+    },
   },
   {
     id: 'side-attachment',
@@ -30,6 +80,14 @@ export const INITIAL_INSPECTION_TASKS: EruvInspectionTask[] = [
     fixActionLabel: 'Relocate Wire to Top Cap Groove',
     cameraPosition: [16, 7, 10],
     cameraTarget: [14, 4, 4],
+    sourceCitation: {
+      siman: 362,
+      seif: '11',
+      citation: 'Shulchan Aruch, Orach Chayim §362:11',
+      hebrewCitation: 'שו״ע או״ח סימן שס״ב סעיף י״א',
+      rulingSummary: 'The lintel must rest directly above the doorposts. Side attachments fail to form a kosher doorway.',
+      mishnahBerurahRef: 'Mishnah Berurah §362 s.k. 49–65; Biur Halacha s.v. "Al Gabav"',
+    },
   },
   {
     id: 'leaning-pole',
@@ -45,6 +103,14 @@ export const INITIAL_INSPECTION_TASKS: EruvInspectionTask[] = [
     fixActionLabel: 'Straighten & Re-anchor Pole',
     cameraPosition: [12, 7, -10],
     cameraTarget: [10, 4, -8],
+    sourceCitation: {
+      siman: 363,
+      seif: '15',
+      citation: 'Shulchan Aruch, Orach Chayim §363:15',
+      hebrewCitation: 'שו״ע או״ח סימן שס״ג סעיף ט״ו',
+      rulingSummary: 'A Lechi must stand straight and rigid so its vertical plane ascends straight up to meet the overhead cable.',
+      mishnahBerurahRef: 'Mishnah Berurah §363 s.k. 15, 27',
+    },
   },
   {
     id: 'large-gap',
@@ -60,6 +126,14 @@ export const INITIAL_INSPECTION_TASKS: EruvInspectionTask[] = [
     fixActionLabel: 'Install Post & Span Doorway Wire',
     cameraPosition: [-12, 7, 4],
     cameraTarget: [-10, 3, 0],
+    sourceCitation: {
+      siman: 362,
+      seif: '9–10',
+      citation: 'Shulchan Aruch, Orach Chayim §362:9–10',
+      hebrewCitation: 'שו״ע או״ח סימן שס״ב סעיפים ט׳–י׳',
+      rulingSummary: 'Gaps exceeding 10 amot breach a private domain unless closed by a Tzurat HaPetach doorway.',
+      mishnahBerurahRef: 'Mishnah Berurah §362 s.k. 41–48',
+    },
   },
   {
     id: 'eruv-chatzerot',
@@ -75,8 +149,103 @@ export const INITIAL_INSPECTION_TASKS: EruvInspectionTask[] = [
     fixActionLabel: 'Dedicate Communal Matzah Box with Blessing',
     cameraPosition: [0, 6, -2],
     cameraTarget: [0, 2, -6],
+    sourceCitation: {
+      siman: 366,
+      seif: '1–3',
+      citation: 'Shulchan Aruch, Orach Chayim §366:1–3',
+      hebrewCitation: 'שו״ע או״ח סימן שס״ו סעיפים א׳–ג׳',
+      rulingSummary: 'Residents of different private domiciles enclosed together must establish an Eruv Chatzerot through communal bread to carry between courtyards.',
+      mishnahBerurahRef: 'Mishnah Berurah §366 s.k. 1–15',
+    },
+  },
+  {
+    id: 'lavud-gap',
+    title: 'Soil Erosion Under Lechi Base (Lavud Breach)',
+    locationName: 'South-West Boulevard (Pole #1)',
+    poleIndex: 1,
+    description: 'Stormwater eroded the soil beneath this Lechi post, creating an 11-inch (~3.5 tefachim) open gap between the bottom of the Lechi and the ground. Under the principle of Lavud, gaps under 3 tefachim are legally solid, but gaps 3 tefachim or wider breach the partition!',
+    halachicIssue: 'A Lechi must reach within 3 Tefachim (~9.4 in / 24 cm) of the ground so that Lavud can view it as resting on the earth. An 11-inch void prevents the partition from connecting to the ground (Karka Olam), invalidating the post.',
+    halachicRule: 'Lavud Gap Rule (Gaps < 3 Tefachim)',
+    hebrewTerm: 'פחות משלושה טפחים סמוך לקרקע (Lavud - Pachot MiSheloshah)',
+    source: 'Shulchan Aruch, Orach Chayim §362:1; Mishnah Berurah §362:3; Talmud Shabbat 97a',
+    fixed: false,
+    fixActionLabel: 'Pack Crushed Stone & Lower Lechi Extension',
+    cameraPosition: [-12, 7, 18],
+    cameraTarget: [-10, 3, 20],
+    sourceCitation: {
+      siman: 362,
+      seif: '1',
+      citation: 'Shulchan Aruch, Orach Chayim §362:1',
+      hebrewCitation: 'שו״ע או״ח סימן שס״ב סעיף א׳',
+      rulingSummary: 'Partitions must reach within 3 tefachim of the ground. Any gap of 3 tefachim or more cannot be closed by Lavud and renders the partition pasul.',
+      mishnahBerurahRef: 'Mishnah Berurah §362 s.k. 3–5',
+    },
+  },
+  {
+    id: 'slack-wire',
+    title: 'Thermal Cable Sag & Wind Sway',
+    locationName: 'South-East Boulevard (Pole #5)',
+    poleIndex: 5,
+    description: 'Summer heat expanded the synthetic monofilament cable, leaving it severely slack. A gusty breeze is blowing the wire 14 inches out of alignment, causing it to drift away from the vertical plane directly above the Lechis!',
+    halachicIssue: 'The overhead wire of a Tzurat HaPetach must be sufficiently taut so that standard winds (Ruach Metzuya) cannot displace it from directly above the doorposts. When wind blows the cable out of vertical alignment, the doorway is invalid during the gust.',
+    halachicRule: 'Wind Deflection & Lintel Stability (Ruach Metzuya)',
+    hebrewTerm: 'מנשבת בו הרוח (Menashevet Bo HaRuach)',
+    source: 'Shulchan Aruch, Orach Chayim §362:11; Mishnah Berurah §362:65; Chazon Ish OC §71',
+    fixed: false,
+    fixActionLabel: 'Install Tension Spring & Tighten Turnbuckle',
+    cameraPosition: [18, 7, -12],
+    cameraTarget: [20, 4, -16],
+    sourceCitation: {
+      siman: 362,
+      seif: '11',
+      citation: 'Shulchan Aruch, Orach Chayim §362:11',
+      hebrewCitation: 'שו״ע או״ח סימן שס״ב סעיף י״א',
+      rulingSummary: 'The crossbeam or wire must remain stable directly over the posts; if common wind sways it off the Lechi tops, it is not a kosher doorway.',
+      mishnahBerurahRef: 'Mishnah Berurah §362 s.k. 65',
+    },
+  },
+  {
+    id: 'sechirat-reshut',
+    title: 'Expired Municipal Street Rights Lease (Sechirat Reshut)',
+    locationName: 'Town Civic Center / Police Station (Pole #7)',
+    poleIndex: 7,
+    description: 'Even with a 100% kosher physical perimeter, Jewish law requires leasing the civil jurisdiction of public thoroughfares from local municipal authorities (Mayor, Town Council, or Police Chief) for a nominal sum ($1). The community\'s annual lease expired at midnight!',
+    halachicIssue: 'Without Sechirat Reshut (rental of domain jurisdiction), common municipal streets cannot be legally unified with private residences, rendering carrying Rabbinically prohibited for the entire city.',
+    halachicRule: 'Municipal Domain Lease (Sechirat Reshut)',
+    hebrewTerm: 'שכירת רשות משלטונות העיר (Sechirat Reshut)',
+    source: 'Shulchan Aruch, Orach Chayim §391:1; Mishnah Berurah §391:1–7; Talmud Eruvin 62a',
+    fixed: false,
+    fixActionLabel: 'Execute Annual $1 Civic Lease with Town Magistrate',
+    cameraPosition: [-16, 7, -12],
+    cameraTarget: [-20, 3, -16],
+    sourceCitation: {
+      siman: 391,
+      seif: '1',
+      citation: 'Shulchan Aruch, Orach Chayim §391:1',
+      hebrewCitation: 'שו״ע או״ח סימן שצ״א סעיף א׳',
+      rulingSummary: 'One must rent domain rights from the civil authorities holding jurisdiction over the roads. A nominal fee or symbolic token suffices.',
+      mishnahBerurahRef: 'Mishnah Berurah §391 s.k. 1–8',
+    },
   },
 ];
+
+export function getTasksForDifficulty(difficulty: GameDifficulty): EruvInspectionTask[] {
+  switch (difficulty) {
+    case 'easy':
+      return ALL_INSPECTION_TASKS
+        .filter(t => ['broken-wire', 'side-attachment', 'eruv-chatzerot'].includes(t.id))
+        .map(t => ({ ...t, fixed: false }));
+    case 'standard':
+      return ALL_INSPECTION_TASKS
+        .filter(t => ['broken-wire', 'side-attachment', 'leaning-pole', 'large-gap', 'eruv-chatzerot'].includes(t.id))
+        .map(t => ({ ...t, fixed: false }));
+    case 'expert':
+    default:
+      return ALL_INSPECTION_TASKS.map(t => ({ ...t, fixed: false }));
+  }
+}
+
+export const INITIAL_INSPECTION_TASKS: EruvInspectionTask[] = getTasksForDifficulty('standard');
 
 export const SHABBAT_DOMAINS: DomainItem[] = [
   {
